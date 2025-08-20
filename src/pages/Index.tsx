@@ -1,12 +1,23 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import Navigation from "@/components/Navigation";
+import HeroSection from "@/components/HeroSection";
+import StraplineSection from "@/components/StraplineSection";
+import CyberAssaultSection from "@/components/CyberAssaultSection";
+import NetworkMosaicSection from "@/components/NetworkMosaicSection";
+import CrisisPortraitSection from "@/components/CrisisPortraitSection";
+import HomelandSection from "@/components/HomelandSection";
+import DashboardSection from "@/components/DashboardSection";
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen bg-background">
+      <Navigation />
+      <HeroSection />
+      <StraplineSection />
+      <CyberAssaultSection />
+      <NetworkMosaicSection />
+      <CrisisPortraitSection />
+      <HomelandSection />
+      <DashboardSection />
     </div>
   );
 };
