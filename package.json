@@ -9,7 +9,7 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "deploy": "npm run build && npx wrangler deploy --assets=./dist"
+    "deploy": "npm run build && npx wrangler deploy"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
