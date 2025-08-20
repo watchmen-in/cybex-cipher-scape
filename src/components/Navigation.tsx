@@ -17,22 +17,28 @@ const Navigation = () => {
           </div>
           
           {/* Navigation Links */}
-          <div className="hidden md:flex items-center space-x-8">
-            {navItems.map((item) => (
-              <button
-                key={item}
-                onClick={() => setActiveItem(item)}
-                className={`relative text-white/90 hover:text-white transition-colors duration-300 ${
-                  activeItem === item ? "text-white" : ""
-                }`}
-              >
-                {item}
-                {activeItem === item && (
-                  <div className="absolute -bottom-2 left-0 right-0 h-0.5 bg-cyber-amber rounded-full" />
-                )}
-              </button>
-            ))}
-          </div>
+          <nav className="hidden md:flex space-x-8">
+            <a href="/" className="text-white/80 hover:text-white transition-colors relative group">
+              Home
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-cyber-amber transition-all duration-300 group-hover:w-full"></span>
+            </a>
+            <a href="/threat-intelligence" className="text-white/80 hover:text-white transition-colors relative group">
+              Threat Intelligence
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-cyber-amber transition-all duration-300 group-hover:w-full"></span>
+            </a>
+            <a href="#" className="text-white/80 hover:text-white transition-colors relative group">
+              Services
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-cyber-amber transition-all duration-300 group-hover:w-full"></span>
+            </a>
+            <a href="#" className="text-white/80 hover:text-white transition-colors relative group">
+              About Us
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-cyber-amber transition-all duration-300 group-hover:w-full"></span>
+            </a>
+            <a href="#" className="text-white/80 hover:text-white transition-colors relative group">
+              Resources
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-cyber-amber transition-all duration-300 group-hover:w-full"></span>
+            </a>
+          </nav>
           
           {/* Mobile Menu Button */}
           <button className="md:hidden text-white">
