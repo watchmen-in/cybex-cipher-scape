@@ -9,8 +9,11 @@ const Navigation = () => {
       <div className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <div className="text-2xl font-bold text-white text-shadow">
-            CyDex
+          <div className="flex items-center space-x-2">
+            <div className="flex items-center">
+              <span className="text-2xl font-bold text-white tracking-tight">cyde</span>
+              <span className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-red-500 bg-clip-text text-transparent">x</span>
+            </div>
           </div>
           
           {/* Navigation Links */}
