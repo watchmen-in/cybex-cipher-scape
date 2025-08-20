@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Users, Globe, Target, TrendingUp, AlertTriangle, Eye, MapPin, FileText } from "lucide-react";
+import { Search, Users, Globe, Target, TrendingUp, AlertTriangle, Eye, MapPin, FileText, Network, GitBranch } from "lucide-react";
 import { useState } from "react";
 
 const IntrusionSetCrosswalk = () => {
@@ -80,6 +80,36 @@ const IntrusionSetCrosswalk = () => {
       techniques: ["T1566.001", "T1055", "T1547.001", "T1105"],
       campaigns: 52,
       victims: 167
+    }
+  ];
+
+  const relationships = [
+    {
+      id: 1,
+      source: 'APT1',
+      target: 'APT40',
+      relationship: 'Infrastructure Sharing',
+      confidence: 'High',
+      evidence: ['Shared C2 servers', 'Similar TTPs'],
+      description: 'Both groups have been observed using overlapping command and control infrastructure'
+    },
+    {
+      id: 2,
+      source: 'Cozy Bear',
+      target: 'APT1',
+      relationship: 'Operational Coordination',
+      confidence: 'Medium',
+      evidence: ['Timing correlation', 'Target overlap'],
+      description: 'Coordinated campaigns observed against similar government targets'
+    },
+    {
+      id: 3,
+      source: 'Lazarus Group',
+      target: 'APT40',
+      relationship: 'Tool Sharing',
+      confidence: 'High',
+      evidence: ['Shared malware families', 'Code reuse'],
+      description: 'Evidence of shared custom malware tools and techniques'
     }
   ];
 
@@ -399,13 +429,147 @@ const IntrusionSetCrosswalk = () => {
             </TabsContent>
 
             <TabsContent value="relationships" className="mt-8">
-              <div className="text-center py-12">
-                <TrendingUp className="w-16 h-16 text-white/20 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-white mb-2">Relationship Mapping</h3>
-                <p className="text-white/60 mb-6">Interactive visualization of threat actor relationships and affiliations.</p>
-                <Button className="bg-cyber-blue hover:bg-cyber-blue/80">
-                  View Network Graph
-                </Button>
+              <div className="space-y-6">
+                {/* Header with Network Graph Button */}
+                <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="text-white flex items-center">
+                          <Network className="w-5 h-5 mr-2 text-cyber-blue" />
+                          Relationship Mapping
+                        </CardTitle>
+                        <CardDescription className="text-white/70">
+                          Interactive visualization of threat actor relationships and affiliations
+                        </CardDescription>
+                      </div>
+                      <Button className="bg-gradient-to-r from-cyber-blue to-cyber-amber hover:from-cyber-blue/80 hover:to-cyber-amber/80">
+                        <Network className="h-4 w-4 mr-2" />
+                        View Network Graph
+                      </Button>
+                    </div>
+                  </CardHeader>
+                </Card>
+
+                {/* Relationship Cards */}
+                <div className="space-y-4">
+                  {relationships.map((rel) => (
+                    <Card key={rel.id} className="bg-white/5 border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-4">
+                            <Badge variant="outline" className="border-cyber-blue/30 text-cyber-blue bg-cyber-blue/10 px-3 py-1">
+                              {rel.source}
+                            </Badge>
+                            <div className="flex items-center gap-2 text-white/60">
+                              <GitBranch className="h-4 w-4" />
+                              <span className="text-sm">{rel.relationship}</span>
+                            </div>
+                            <Badge variant="outline" className="border-cyber-amber/30 text-cyber-amber bg-cyber-amber/10 px-3 py-1">
+                              {rel.target}
+                            </Badge>
+                          </div>
+                          <Badge 
+                            className={`${
+                              rel.confidence === 'High' 
+                                ? 'bg-green-500/20 text-green-400 border-green-500/30' 
+                                : rel.confidence === 'Medium'
+                                ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
+                                : 'bg-red-500/20 text-red-400 border-red-500/30'
+                            }`}
+                          >
+                            {rel.confidence} Confidence
+                          </Badge>
+                        </div>
+                        
+                        <p className="text-white/80 mb-3">{rel.description}</p>
+                        
+                        <div className="space-y-2">
+                          <div className="text-sm text-white/60">Evidence:</div>
+                          <div className="flex flex-wrap gap-2">
+                            {rel.evidence.map((evidence, index) => (
+                              <Badge key={index} variant="outline" className="border-white/20 text-white/70 text-xs">
+                                {evidence}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+
+                {/* Network Visualization Placeholder */}
+                <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
+                  <CardHeader>
+                    <CardTitle className="text-white">Interactive Network Visualization</CardTitle>
+                    <CardDescription className="text-white/70">
+                      Dynamic graph showing threat actor connections and relationship strength
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-96 bg-black/20 rounded border border-white/10 flex items-center justify-center relative overflow-hidden">
+                      {/* Simulated Network Nodes */}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="relative">
+                          {/* Central APT1 Node */}
+                          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                            <div className="w-16 h-16 bg-cyber-blue/30 border-2 border-cyber-blue rounded-full flex items-center justify-center">
+                              <span className="text-cyber-blue font-bold text-xs">APT1</span>
+                            </div>
+                          </div>
+                          
+                          {/* APT40 Node */}
+                          <div className="absolute top-16 left-32 transform -translate-x-1/2 -translate-y-1/2">
+                            <div className="w-12 h-12 bg-cyber-amber/30 border-2 border-cyber-amber rounded-full flex items-center justify-center">
+                              <span className="text-cyber-amber font-bold text-xs">APT40</span>
+                            </div>
+                            {/* Connection Line */}
+                            <div className="absolute bottom-4 right-4 w-16 h-0.5 bg-gradient-to-r from-cyber-amber to-cyber-blue transform rotate-45 opacity-60"></div>
+                          </div>
+                          
+                          {/* Cozy Bear Node */}
+                          <div className="absolute top-32 left-0 transform -translate-x-1/2 -translate-y-1/2">
+                            <div className="w-12 h-12 bg-red-500/30 border-2 border-red-500 rounded-full flex items-center justify-center">
+                              <span className="text-red-400 font-bold text-xs">CB</span>
+                            </div>
+                            {/* Connection Line */}
+                            <div className="absolute bottom-0 right-8 w-20 h-0.5 bg-gradient-to-r from-red-500 to-cyber-blue transform rotate-12 opacity-40"></div>
+                          </div>
+                          
+                          {/* Lazarus Node */}
+                          <div className="absolute top-4 right-0 transform -translate-x-1/2 -translate-y-1/2">
+                            <div className="w-10 h-10 bg-purple-500/30 border-2 border-purple-500 rounded-full flex items-center justify-center">
+                              <span className="text-purple-400 font-bold text-xs">LZ</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Overlay Info */}
+                      <div className="absolute bottom-4 left-4 text-white/60">
+                        <div className="text-sm">Node size indicates campaign volume</div>
+                        <div className="text-xs">Line thickness shows relationship strength</div>
+                      </div>
+                      
+                      {/* Legend */}
+                      <div className="absolute top-4 right-4 space-y-2">
+                        <div className="flex items-center gap-2 text-xs">
+                          <div className="w-3 h-3 bg-cyber-blue rounded-full"></div>
+                          <span className="text-white/60">High Volume</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs">
+                          <div className="w-2 h-2 bg-cyber-amber rounded-full"></div>
+                          <span className="text-white/60">Medium Volume</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs">
+                          <div className="w-1 h-1 bg-purple-500 rounded-full"></div>
+                          <span className="text-white/60">Low Volume</span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             </TabsContent>
           </Tabs>

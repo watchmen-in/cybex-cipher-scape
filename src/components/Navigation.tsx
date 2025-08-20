@@ -60,9 +60,6 @@ const Navigation = () => {
                   <a href="/cyber-map-america" className="block px-4 py-2 text-white/80 hover:text-white hover:bg-white/10 transition-colors">
                     Cyber Map of America
                   </a>
-                  <a href="/link-analysis" className="block px-4 py-2 text-white/80 hover:text-white hover:bg-white/10 transition-colors">
-                    Link Analysis
-                  </a>
                 </div>
               </div>
             </div>
