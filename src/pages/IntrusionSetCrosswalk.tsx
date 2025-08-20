@@ -113,6 +113,45 @@ const IntrusionSetCrosswalk = () => {
     }
   ];
 
+  const campaigns = [
+    {
+      id: 1,
+      name: 'Operation Aurora',
+      threatActor: 'APT1',
+      startDate: '2023-06-01',
+      endDate: '2024-01-15',
+      targets: ['Google', 'Adobe', 'Juniper', 'Rackspace'],
+      status: 'Active',
+      description: 'Sophisticated supply chain attack targeting intellectual property'
+    },
+    {
+      id: 2,
+      name: 'SolarWinds Compromise',
+      threatActor: 'Cozy Bear',
+      startDate: '2019-03-01',
+      endDate: '2020-12-13',
+      targets: ['SolarWinds', 'Microsoft', 'FireEye', 'US Treasury'],
+      status: 'Contained',
+      description: 'Major supply chain attack affecting thousands of organizations'
+    },
+    {
+      id: 3,
+      name: 'WannaCry Outbreak',
+      threatActor: 'Lazarus Group',
+      startDate: '2017-05-12',
+      endDate: '2017-05-15',
+      targets: ['NHS', 'FedEx', 'Renault', 'Telefonica'],
+      status: 'Contained',
+      description: 'Global ransomware attack exploiting Windows vulnerabilities'
+    }
+  ];
+
+  const vendorTaxonomies = [
+    'FireEye', 'Mandiant', 'CrowdStrike', 'Microsoft', 'Symantec',
+    'Kaspersky', 'ESET', 'Trend Micro', 'Palo Alto', 'Check Point',
+    'Cisco Talos', 'IBM X-Force', 'McAfee', 'Carbon Black'
+  ];
+
   const filteredActors = threatActors.filter(actor => {
     const matchesOrigin = selectedOrigin === "all" || actor.origin === selectedOrigin;
     const matchesSearch = actor.primaryName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -336,91 +375,229 @@ const IntrusionSetCrosswalk = () => {
             </TabsContent>
 
             <TabsContent value="campaigns" className="mt-8">
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
-                  <CardHeader>
-                    <CardTitle className="text-white text-lg">Active Campaigns</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold text-cyber-blue mb-2">167</div>
-                    <p className="text-white/60 text-sm">Currently tracking</p>
-                  </CardContent>
-                </Card>
-                
-                <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
-                  <CardHeader>
-                    <CardTitle className="text-white text-lg">High Priority</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold text-red-400 mb-2">23</div>
-                    <p className="text-white/60 text-sm">Critical infrastructure targets</p>
-                  </CardContent>
-                </Card>
-                
-                <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
-                  <CardHeader>
-                    <CardTitle className="text-white text-lg">New This Month</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold text-cyber-amber mb-2">8</div>
-                    <p className="text-white/60 text-sm">Emerging threats</p>
-                  </CardContent>
-                </Card>
+              <div className="space-y-6">
+                {/* Campaign Stats Overview */}
+                <div className="grid md:grid-cols-3 gap-6 mb-8">
+                  <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
+                    <CardHeader>
+                      <CardTitle className="text-white text-lg">Active Campaigns</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-3xl font-bold text-cyber-blue mb-2">167</div>
+                      <p className="text-white/60 text-sm">Currently tracking</p>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
+                    <CardHeader>
+                      <CardTitle className="text-white text-lg">High Priority</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-3xl font-bold text-red-400 mb-2">23</div>
+                      <p className="text-white/60 text-sm">Critical infrastructure targets</p>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
+                    <CardHeader>
+                      <CardTitle className="text-white text-lg">New This Month</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-3xl font-bold text-cyber-amber mb-2">8</div>
+                      <p className="text-white/60 text-sm">Emerging threats</p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Detailed Campaign Cards */}
+                <div className="space-y-6">
+                  {campaigns.map((campaign) => (
+                    <Card key={campaign.id} className="bg-white/5 border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all">
+                      <CardHeader>
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <CardTitle className="text-white text-xl">{campaign.name}</CardTitle>
+                            <CardDescription className="text-white/70 mt-2">
+                              Attributed to: <Badge variant="outline" className="border-cyber-blue/30 text-cyber-blue ml-1">{campaign.threatActor}</Badge>
+                            </CardDescription>
+                          </div>
+                          <Badge 
+                            variant={campaign.status === 'Active' ? 'destructive' : 'secondary'}
+                            className={campaign.status === 'Active' ? 'bg-red-500/20 text-red-400 border-red-500/30' : 'bg-green-500/20 text-green-400 border-green-500/30'}
+                          >
+                            {campaign.status}
+                          </Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-white/80 mb-4">{campaign.description}</p>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                          <div>
+                            <div className="text-sm text-white/60">Start Date</div>
+                            <div className="text-white font-medium">{campaign.startDate}</div>
+                          </div>
+                          <div>
+                            <div className="text-sm text-white/60">End Date</div>
+                            <div className="text-white font-medium">{campaign.endDate}</div>
+                          </div>
+                          <div>
+                            <div className="text-sm text-white/60">Targets</div>
+                            <div className="text-white font-medium">{campaign.targets.length} organizations</div>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <div className="text-sm text-white/60 mb-2">Primary Targets</div>
+                          <div className="flex flex-wrap gap-2">
+                            {campaign.targets.map((target) => (
+                              <Badge key={target} variant="outline" className="border-cyber-amber/30 text-cyber-amber bg-cyber-amber/10 text-xs">
+                                {target}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
               </div>
             </TabsContent>
 
             <TabsContent value="attribution" className="mt-8">
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-6">
+                {/* Attribution Overview */}
+                <div className="grid md:grid-cols-2 gap-6">
+                  <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
+                    <CardHeader>
+                      <CardTitle className="text-white flex items-center">
+                        <MapPin className="w-5 h-5 mr-2 text-cyber-blue" />
+                        Geographic Distribution
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {origins.filter(o => o.id !== "all").map((origin) => (
+                          <div key={origin.id} className="flex justify-between items-center">
+                            <span className="text-white/80 flex items-center">
+                              <span className="mr-2">{origin.flag}</span>
+                              {origin.name}
+                            </span>
+                            <div className="flex items-center gap-2">
+                              <div className="w-20 h-2 bg-white/10 rounded">
+                                <div 
+                                  className="h-full bg-cyber-blue rounded" 
+                                  style={{ width: `${(origin.count / 156) * 100}%` }}
+                                />
+                              </div>
+                              <span className="text-cyber-blue text-sm font-medium">{origin.count}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
+                    <CardHeader>
+                      <CardTitle className="text-white flex items-center">
+                        <TrendingUp className="w-5 h-5 mr-2 text-cyber-amber" />
+                        Attribution Confidence
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center">
+                          <span className="text-white/80">High Confidence</span>
+                          <Badge className="bg-green-500/20 text-green-400">312 groups</Badge>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-white/80">Medium Confidence</span>
+                          <Badge className="bg-yellow-500/20 text-yellow-400">189 groups</Badge>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-white/80">Low Confidence</span>
+                          <Badge className="bg-red-500/20 text-red-400">46 groups</Badge>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Cross-Vendor Attribution Analysis */}
                 <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
                   <CardHeader>
-                    <CardTitle className="text-white flex items-center">
-                      <MapPin className="w-5 h-5 mr-2 text-cyber-blue" />
-                      Geographic Distribution
-                    </CardTitle>
+                    <CardTitle className="text-white">Cross-Vendor Attribution Analysis</CardTitle>
+                    <CardDescription className="text-white/70">
+                      Correlation and confidence scoring across 14 cybersecurity vendor taxonomies
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
-                      {origins.filter(o => o.id !== "all").map((origin) => (
-                        <div key={origin.id} className="flex justify-between items-center">
-                          <span className="text-white/80 flex items-center">
-                            <span className="mr-2">{origin.flag}</span>
-                            {origin.name}
-                          </span>
-                          <div className="flex items-center gap-2">
-                            <div className="w-20 h-2 bg-white/10 rounded">
-                              <div 
-                                className="h-full bg-cyber-blue rounded" 
-                                style={{ width: `${(origin.count / 156) * 100}%` }}
-                              />
+                    <div className="space-y-6">
+                      {/* Vendor Grid */}
+                      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+                        {vendorTaxonomies.map((vendor) => (
+                          <div key={vendor} className="p-3 bg-black/20 rounded border border-white/10 text-center hover:bg-white/5 transition-colors">
+                            <div className="text-xs text-white/60 mb-1">{vendor}</div>
+                            <div className="text-green-400 text-sm font-medium">✓ Active</div>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      {/* Consensus Scoring */}
+                      <div className="grid md:grid-cols-3 gap-4">
+                        <div className="p-4 bg-gradient-to-r from-blue-500/10 to-blue-600/10 border border-blue-500/20 rounded-lg">
+                          <div className="text-sm text-blue-400 font-medium mb-2">Overall Consensus</div>
+                          <div className="text-2xl text-white font-bold">87%</div>
+                          <div className="text-xs text-white/60">High confidence attribution</div>
+                        </div>
+                        
+                        <div className="p-4 bg-gradient-to-r from-green-500/10 to-green-600/10 border border-green-500/20 rounded-lg">
+                          <div className="text-sm text-green-400 font-medium mb-2">Vendor Agreement</div>
+                          <div className="text-2xl text-white font-bold">12/14</div>
+                          <div className="text-xs text-white/60">Vendors in consensus</div>
+                        </div>
+                        
+                        <div className="p-4 bg-gradient-to-r from-amber-500/10 to-amber-600/10 border border-amber-500/20 rounded-lg">
+                          <div className="text-sm text-amber-400 font-medium mb-2">Update Frequency</div>
+                          <div className="text-2xl text-white font-bold">Daily</div>
+                          <div className="text-xs text-white/60">Real-time correlation</div>
+                        </div>
+                      </div>
+
+                      {/* Attribution Details */}
+                      <div className="space-y-3">
+                        <h4 className="text-white font-medium">Attribution Methodology</h4>
+                        <div className="grid md:grid-cols-2 gap-4 text-sm">
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2 text-white/80">
+                              <div className="w-2 h-2 bg-cyber-blue rounded-full"></div>
+                              <span>TTP correlation analysis</span>
                             </div>
-                            <span className="text-cyber-blue text-sm font-medium">{origin.count}</span>
+                            <div className="flex items-center gap-2 text-white/80">
+                              <div className="w-2 h-2 bg-cyber-blue rounded-full"></div>
+                              <span>Infrastructure overlap detection</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-white/80">
+                              <div className="w-2 h-2 bg-cyber-blue rounded-full"></div>
+                              <span>Malware family analysis</span>
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2 text-white/80">
+                              <div className="w-2 h-2 bg-cyber-amber rounded-full"></div>
+                              <span>Timing pattern correlation</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-white/80">
+                              <div className="w-2 h-2 bg-cyber-amber rounded-full"></div>
+                              <span>Target sector analysis</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-white/80">
+                              <div className="w-2 h-2 bg-cyber-amber rounded-full"></div>
+                              <span>Geopolitical context assessment</span>
+                            </div>
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
-                  <CardHeader>
-                    <CardTitle className="text-white flex items-center">
-                      <TrendingUp className="w-5 h-5 mr-2 text-cyber-amber" />
-                      Attribution Confidence
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <span className="text-white/80">High Confidence</span>
-                        <Badge className="bg-green-500/20 text-green-400">312 groups</Badge>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-white/80">Medium Confidence</span>
-                        <Badge className="bg-yellow-500/20 text-yellow-400">189 groups</Badge>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-white/80">Low Confidence</span>
-                        <Badge className="bg-red-500/20 text-red-400">46 groups</Badge>
                       </div>
                     </div>
                   </CardContent>
