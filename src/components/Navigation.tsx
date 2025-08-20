@@ -22,22 +22,47 @@ const Navigation = () => {
               Home
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-cyber-amber transition-all duration-300 group-hover:w-full"></span>
             </a>
-            <a href="/threat-intelligence" className="text-white/80 hover:text-white transition-colors relative group">
-              Threat Intelligence
-              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-cyber-amber transition-all duration-300 group-hover:w-full"></span>
-            </a>
-            <a href="#" className="text-white/80 hover:text-white transition-colors relative group">
-              Services
-              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-cyber-amber transition-all duration-300 group-hover:w-full"></span>
-            </a>
-            <a href="#" className="text-white/80 hover:text-white transition-colors relative group">
+            
+            {/* Services Dropdown */}
+            <div className="relative group">
+              <a href="#" className="text-white/80 hover:text-white transition-colors relative">
+                Services
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-cyber-amber transition-all duration-300 group-hover:w-full"></span>
+              </a>
+              <div className="absolute top-full left-0 mt-2 w-48 bg-background/95 backdrop-blur-md border border-white/10 rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
+                <div className="py-2">
+                  <a href="/threat-intelligence" className="block px-4 py-2 text-white/80 hover:text-white hover:bg-white/10 transition-colors">
+                    Threat Intelligence
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <a href="/about-us" className="text-white/80 hover:text-white transition-colors relative group">
               About Us
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-cyber-amber transition-all duration-300 group-hover:w-full"></span>
             </a>
-            <a href="#" className="text-white/80 hover:text-white transition-colors relative group">
-              Resources
-              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-cyber-amber transition-all duration-300 group-hover:w-full"></span>
-            </a>
+            
+            {/* Resources Dropdown */}
+            <div className="relative group">
+              <a href="#" className="text-white/80 hover:text-white transition-colors relative">
+                Resources
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-cyber-amber transition-all duration-300 group-hover:w-full"></span>
+              </a>
+              <div className="absolute top-full left-0 mt-2 w-56 bg-background/95 backdrop-blur-md border border-white/10 rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
+                <div className="py-2">
+                  <a href="/catalog" className="block px-4 py-2 text-white/80 hover:text-white hover:bg-white/10 transition-colors">
+                    Catalog
+                  </a>
+                  <a href="/intrusion-set-crosswalk" className="block px-4 py-2 text-white/80 hover:text-white hover:bg-white/10 transition-colors">
+                    Intrusion Set Crosswalk
+                  </a>
+                  <a href="/cyber-map-america" className="block px-4 py-2 text-white/80 hover:text-white hover:bg-white/10 transition-colors">
+                    Cyber Map of America
+                  </a>
+                </div>
+              </div>
+            </div>
           </nav>
           
           {/* Mobile Menu Button */}
