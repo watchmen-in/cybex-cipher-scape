@@ -41,7 +41,7 @@ const CyberAssaultSection = () => {
             Unfolding Crisis
           </h2>
           <p className="text-xl text-white/70 max-w-2xl mx-auto">
-            Real-time analysis reveals coordinated attack patterns across multiple targets.
+            Coordinated cyber campaigns are unfolding across lifeline sectors. CyDex exposes the patterns, scope, and scale of adversary activity in real time.
           </p>
         </div>
         

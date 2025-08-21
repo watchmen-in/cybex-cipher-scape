@@ -25,7 +25,7 @@ const HomelandSection = () => {
                 Comprehensive intelligence on emerging threats and attack vectors.
               </p>
               <Button variant="outline" size="sm" className="border-cyber-cyan text-cyber-cyan hover:bg-cyber-cyan hover:text-background">
-                View Reports
+                Schedule Assessment
               </Button>
             </div>
             

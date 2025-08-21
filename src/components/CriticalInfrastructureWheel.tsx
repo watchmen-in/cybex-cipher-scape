@@ -26,7 +26,7 @@ const CriticalInfrastructureWheel = () => {
     {
       id: 'energy',
       name: 'Energy',
-      icon: '⚡',
+      icon: '⚡', // TODO: Replace with SVG icon
       status: 'Elevated',
       activeAlerts: 12,
       topVector: 'Grid operations malware',
@@ -38,16 +38,16 @@ const CriticalInfrastructureWheel = () => {
         'Supply chain compromise in protective relays and firmware update channels'
       ],
       kpis: {
-        'Outage risk': 'Medium',
-        'Impacted sites': '24',
-        'Known IOCs': '156'
+        'Outage risk': '{{energy_outage_risk}}',
+        'Impacted sites': '{{energy_impacted_sites}}',
+        'Known IOCs': '{{energy_iocs}}'
       },
       action: 'Validate relay firmware integrity, segment OT from IT, deploy allow-list on engineering stations'
     },
     {
       id: 'communications',
       name: 'Communications',
-      icon: '📡',
+      icon: '📡', // TODO: Replace with SVG icon
       status: 'Normal',
       activeAlerts: 8,
       topVector: 'BGP route manipulation',
@@ -59,8 +59,8 @@ const CriticalInfrastructureWheel = () => {
         'DDoS on DNS and CDN edges degrading content delivery'
       ],
       kpis: {
-        'Service availability': '99.2%',
-        'Targeted ASNs': '8'
+        'Service availability': '{{comm_availability}}',
+        'Targeted ASNs': '{{comm_targeted_asns}}'
       },
       action: 'Enforce RPKI, hardened DNS, upstream scrubbing with auto failover'
     },
@@ -278,13 +278,13 @@ const CriticalInfrastructureWheel = () => {
         {/* Global Status Badges */}
         <div className="flex flex-wrap justify-center gap-4 mb-12">
           <Badge variant="outline" className="bg-white/5 border-white/20 text-white px-4 py-2">
-            Current posture: <span className="text-cyber-amber ml-1">ELEVATED</span>
+            Current posture: <span className="text-cyber-amber ml-1">{`{{national_posture}}`}</span>
           </Badge>
           <Badge variant="outline" className="bg-white/5 border-white/20 text-white px-4 py-2">
-            Active incidents: <span className="text-cyber-salmon ml-1">127</span>
+            Active incidents: <span className="text-cyber-salmon ml-1">{`{{active_incidents}}`}</span>
           </Badge>
           <Badge variant="outline" className="bg-white/5 border-white/20 text-white px-4 py-2">
-            Coordinated campaigns detected: <span className="text-red-400 ml-1">8</span>
+            Coordinated campaigns detected: <span className="text-red-400 ml-1">{`{{coordinated_campaigns}}`}</span>
           </Badge>
         </div>
 

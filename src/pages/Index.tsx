@@ -3,6 +3,7 @@ import HeroSection from "@/components/HeroSection";
 import StraplineSection from "@/components/StraplineSection";
 import CyberAssaultSection from "@/components/CyberAssaultSection";
 import CriticalInfrastructureWheel from "@/components/CriticalInfrastructureWheel";
+import ThreatLandscapeSection from "@/components/ThreatLandscapeSection";
 import NetworkMosaicSection from "@/components/NetworkMosaicSection";
 import CrisisPortraitSection from "@/components/CrisisPortraitSection";
 import HomelandSection from "@/components/HomelandSection";
@@ -13,13 +14,14 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Navigation />
       <HeroSection />
-      <StraplineSection />
       <CyberAssaultSection />
       <CriticalInfrastructureWheel />
+      <ThreatLandscapeSection />
       <NetworkMosaicSection />
       <CrisisPortraitSection />
       <HomelandSection />
       <DashboardSection />
+      <StraplineSection />
     </div>
   );
 };
