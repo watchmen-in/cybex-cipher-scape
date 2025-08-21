@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MapPin, Shield, Building, Zap, Droplets, Plane, Phone, AlertTriangle, Radio, Eye } from "lucide-react";
 import { useState } from "react";
+import CyberMap from "@/components/CyberMap";
 
 const CyberMapAmerica = () => {
   const [selectedAgency, setSelectedAgency] = useState("all");
@@ -205,60 +206,11 @@ const CyberMapAmerica = () => {
               </div>
             </div>
 
-            {/* Map Visualization Placeholder */}
-            <div className="aspect-video bg-gradient-to-br from-slate-900/50 to-slate-800/50 rounded-lg border border-white/10 flex items-center justify-center relative overflow-hidden">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_70%,rgba(59,130,246,0.1),transparent)]" />
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(245,101,101,0.1),transparent)]" />
-              
-              {/* Simulated Map Points */}
-              <div className="relative w-full h-full">
-                {/* Boston */}
-                <div className="absolute top-20 right-32 group cursor-pointer">
-                  <div className="w-3 h-3 bg-cyber-blue rounded-full animate-pulse shadow-lg shadow-cyber-blue/50"></div>
-                  <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                    Boston - CISA/FBI/FEMA
-                  </div>
-                </div>
-                
-                {/* NYC */}
-                <div className="absolute top-24 right-36 group cursor-pointer">
-                  <div className="w-4 h-4 bg-red-500 rounded-full animate-pulse shadow-lg shadow-red-500/50"></div>
-                  <div className="absolute top-5 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                    NYC - HIGH THREAT
-                  </div>
-                </div>
-                
-                {/* Atlanta */}
-                <div className="absolute top-40 right-40 group cursor-pointer">
-                  <div className="w-3 h-3 bg-cyber-amber rounded-full animate-pulse shadow-lg shadow-cyber-amber/50"></div>
-                  <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                    Atlanta - CISA/FBI
-                  </div>
-                </div>
-                
-                {/* Dallas */}
-                <div className="absolute top-50 left-40 group cursor-pointer">
-                  <div className="w-3 h-3 bg-cyber-amber rounded-full animate-pulse shadow-lg shadow-cyber-amber/50"></div>
-                  <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                    Dallas - CISA/FBI
-                  </div>
-                </div>
-                
-                {/* LA */}
-                <div className="absolute top-48 left-20 group cursor-pointer">
-                  <div className="w-4 h-4 bg-red-500 rounded-full animate-pulse shadow-lg shadow-red-500/50"></div>
-                  <div className="absolute top-5 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                    LA - CRITICAL THREAT
-                  </div>
-                </div>
-              </div>
-              
-              <div className="text-center text-white/60">
-                <MapPin className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                <h3 className="text-lg font-semibold mb-2">Interactive Federal Presence Map</h3>
-                <p className="text-sm">Real-time visualization of federal cybersecurity field presence</p>
-              </div>
-            </div>
+            {/* Interactive Mapbox Map */}
+            <CyberMap 
+              federalPresence={federalPresence}
+              selectedAgency={selectedAgency}
+            />
           </div>
         </div>
       </section>
