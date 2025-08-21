@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
@@ -14,6 +14,51 @@ interface SectorThreat {
 }
 
 const ThreatLandscapeSection = () => {
+  const [metrics, setMetrics] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchMetrics = async () => {
+      try {
+        // Simulate API call for now - replace with actual endpoint
+        const mockMetrics = {
+          energy_outage_risk: "14.2%",
+          energy_impacted_sites: "347",
+          energy_iocs: "1,247",
+          comm_availability: "97.8%",
+          comm_targeted_asns: "23",
+          water_contamination_risk: "3.1%",
+          water_affected_systems: "89",
+          transport_disruption_level: "Low",
+          transport_monitored_routes: "2,847",
+          finance_threat_level: "Elevated",
+          finance_attempted_breaches: "156",
+          health_patient_impact: "0",
+          health_facilities_monitored: "4,293",
+          food_supply_risk: "2.7%",
+          food_monitored_facilities: "891",
+          govt_classified_incidents: "7",
+          govt_agencies_protected: "847",
+          national_posture: "DEFCON 3"
+        };
+        setMetrics(mockMetrics);
+      } catch (error) {
+        console.error('Failed to fetch metrics:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMetrics();
+  }, []);
+
+  const replacePlaceholders = (text: string): string => {
+    if (!text || loading) return text;
+    return text.replace(/\{\{(\w+)\}\}/g, (match, key) => {
+      return metrics[key] || match;
+    });
+  };
+
   const sectorThreats: SectorThreat[] = [
     {
       id: 'energy',
@@ -182,7 +227,7 @@ const ThreatLandscapeSection = () => {
                   {Object.entries(sector.kpis).map(([key, value]) => (
                     <div key={key} className="flex flex-col">
                       <span className="text-white/50">{key}</span>
-                      <span className="text-white font-mono">{value}</span>
+                      <span className="text-white font-mono">{replacePlaceholders(value)}</span>
                     </div>
                   ))}
                 </div>

@@ -21,6 +21,52 @@ interface Sector {
 const CriticalInfrastructureWheel = () => {
   const [rotation, setRotation] = useState(0);
   const [selectedSector, setSelectedSector] = useState<Sector | null>(null);
+  const [metrics, setMetrics] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchMetrics = async () => {
+      try {
+        // Simulate API call for now - replace with actual endpoint
+        const mockMetrics = {
+          energy_outage_risk: "14.2%",
+          energy_impacted_sites: "347",
+          energy_iocs: "1,247",
+          comm_availability: "97.8%",
+          comm_targeted_asns: "23",
+          water_contamination_risk: "3.1%",
+          water_affected_systems: "89",
+          transport_disruption_level: "Low",
+          transport_monitored_routes: "2,847",
+          finance_threat_level: "Elevated",
+          finance_attempted_breaches: "156",
+          health_patient_impact: "0",
+          health_facilities_monitored: "4,293",
+          food_supply_risk: "2.7%",
+          food_monitored_facilities: "891",
+          govt_classified_incidents: "7",
+          govt_agencies_protected: "847",
+          national_posture: "DEFCON 3",
+          active_incidents: "24",
+          coordinated_campaigns: "7"
+        };
+        setMetrics(mockMetrics);
+      } catch (error) {
+        console.error('Failed to fetch metrics:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMetrics();
+  }, []);
+
+  const replacePlaceholders = (text: string): string => {
+    if (!text || loading) return text;
+    return text.replace(/\{\{(\w+)\}\}/g, (match, key) => {
+      return metrics[key] || match;
+    });
+  };
 
   const sectors: Sector[] = [
     {
@@ -278,13 +324,13 @@ const CriticalInfrastructureWheel = () => {
         {/* Global Status Badges */}
         <div className="flex flex-wrap justify-center gap-4 mb-12">
           <Badge variant="outline" className="bg-white/5 border-white/20 text-white px-4 py-2">
-            Current posture: <span className="text-cyber-amber ml-1">{`{{national_posture}}`}</span>
+            Current posture: <span className="text-cyber-amber ml-1">{replacePlaceholders('{{national_posture}}')}</span>
           </Badge>
           <Badge variant="outline" className="bg-white/5 border-white/20 text-white px-4 py-2">
-            Active incidents: <span className="text-cyber-salmon ml-1">{`{{active_incidents}}`}</span>
+            Active incidents: <span className="text-cyber-salmon ml-1">{replacePlaceholders('{{active_incidents}}')}</span>
           </Badge>
           <Badge variant="outline" className="bg-white/5 border-white/20 text-white px-4 py-2">
-            Coordinated campaigns detected: <span className="text-red-400 ml-1">{`{{coordinated_campaigns}}`}</span>
+            Coordinated campaigns detected: <span className="text-red-400 ml-1">{replacePlaceholders('{{coordinated_campaigns}}')}</span>
           </Badge>
         </div>
 
@@ -332,7 +378,7 @@ const CriticalInfrastructureWheel = () => {
                             {Object.entries(sector.kpis).map(([key, value]) => (
                               <div key={key} className="flex justify-between text-sm">
                                 <span className="text-white/70">{key}:</span>
-                                <span className="text-white">{value}</span>
+                                <span className="text-white">{replacePlaceholders(value)}</span>
                               </div>
                             ))}
                           </div>
