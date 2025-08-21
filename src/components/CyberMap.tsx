@@ -1,9 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface CyberMapProps {
   federalPresence: Array<{
@@ -22,9 +19,8 @@ interface CyberMapProps {
 const CyberMap: React.FC<CyberMapProps> = ({ federalPresence, selectedAgency }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
-  const [mapboxToken, setMapboxToken] = useState('');
-  const [showTokenInput, setShowTokenInput] = useState(true);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const mapboxToken = 'pk.eyJ1IjoiY3lkZXhhZG1pbiIsImEiOiJjbWVrcjNhcHkwOHo3MnNvbHlwdHN3YjZwIn0.alurVcp3T1nQZbF-GPk2lw';
 
   const getThreatLevelColor = (level: string) => {
     switch (level) {
@@ -62,8 +58,6 @@ const CyberMap: React.FC<CyberMapProps> = ({ federalPresence, selectedAgency }) 
 
     // Add markers for federal presence locations
     addMarkers();
-
-    setShowTokenInput(false);
   };
 
   const addMarkers = () => {
@@ -134,6 +128,8 @@ const CyberMap: React.FC<CyberMapProps> = ({ federalPresence, selectedAgency }) 
   };
 
   useEffect(() => {
+    initializeMap();
+    
     return () => {
       map.current?.remove();
       markersRef.current.forEach(marker => marker.remove());
@@ -145,47 +141,6 @@ const CyberMap: React.FC<CyberMapProps> = ({ federalPresence, selectedAgency }) 
       addMarkers();
     }
   }, [federalPresence, selectedAgency]);
-
-  if (showTokenInput) {
-    return (
-      <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
-        <CardHeader>
-          <CardTitle className="text-white">Configure Mapbox</CardTitle>
-          <CardDescription className="text-white/70">
-            Enter your Mapbox public token to display the interactive map.{' '}
-            <a 
-              href="https://mapbox.com/" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-cyber-blue hover:underline"
-            >
-              Get your token from Mapbox
-            </a>
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="mapbox-token" className="text-white">Mapbox Public Token</Label>
-            <Input
-              id="mapbox-token"
-              type="text"
-              placeholder="pk.eyJ1IjoieW91cnVzZXJuYW1lIiwi..."
-              value={mapboxToken}
-              onChange={(e) => setMapboxToken(e.target.value)}
-              className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
-            />
-          </div>
-          <button
-            onClick={initializeMap}
-            disabled={!mapboxToken}
-            className="px-4 py-2 bg-cyber-blue hover:bg-cyber-blue/80 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded transition-colors"
-          >
-            Initialize Map
-          </button>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <div className="relative w-full aspect-video bg-gradient-to-br from-slate-900/50 to-slate-800/50 rounded-lg border border-white/10 overflow-hidden">
