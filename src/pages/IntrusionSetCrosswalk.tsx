@@ -10,6 +10,7 @@ import { useState } from "react";
 const IntrusionSetCrosswalk = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedOrigin, setSelectedOrigin] = useState("all");
+  const [selectedActor, setSelectedActor] = useState<number | null>(1); // Default to first actor
 
   const origins = [
     { id: "all", name: "All Origins", count: 547 },
@@ -160,6 +161,11 @@ const IntrusionSetCrosswalk = () => {
     return matchesOrigin && matchesSearch;
   });
 
+  const selectedActorData = threatActors.find(actor => actor.id === selectedActor);
+  const selectedActorCampaigns = campaigns.filter(campaign => campaign.threatActor === selectedActorData?.primaryName);
+  const selectedActorRelationships = relationships.filter(rel => 
+    rel.source === selectedActorData?.primaryName || rel.target === selectedActorData?.primaryName
+  );
   const getConfidenceColor = (confidence: string) => {
     switch (confidence) {
       case "high": return "bg-green-500/20 text-green-400 border-green-500/30";
@@ -243,81 +249,88 @@ const IntrusionSetCrosswalk = () => {
         </div>
       </section>
 
-      {/* Main Content */}
-      <section className="py-12">
+      {/* Main Content - Two Column Layout */}
+      <section className="py-8">
         <div className="container mx-auto px-6">
-          <Tabs defaultValue="actors" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 bg-white/5 border border-white/10">
-              <TabsTrigger value="actors" className="data-[state=active]:bg-cyber-blue data-[state=active]:text-white">
-                <Users className="w-4 h-4 mr-2" />
-                Threat Actors
-              </TabsTrigger>
-              <TabsTrigger value="campaigns" className="data-[state=active]:bg-cyber-blue data-[state=active]:text-white">
-                <Target className="w-4 h-4 mr-2" />
-                Campaigns
-              </TabsTrigger>
-              <TabsTrigger value="attribution" className="data-[state=active]:bg-cyber-blue data-[state=active]:text-white">
-                <MapPin className="w-4 h-4 mr-2" />
-                Attribution
-              </TabsTrigger>
-              <TabsTrigger value="relationships" className="data-[state=active]:bg-cyber-blue data-[state=active]:text-white">
-                <TrendingUp className="w-4 h-4 mr-2" />
-                Relationships
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="actors" className="mt-8">
-              <div className="grid gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-[800px]">
+            
+            {/* Left Column - Threat Actors List */}
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold text-white mb-4">Threat Actors</h2>
+              <div className="space-y-4 overflow-y-auto h-full pr-4">
                 {filteredActors.map((actor) => (
-                  <Card key={actor.id} className="bg-white/5 border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all group">
-                    <CardHeader>
+                  <Card 
+                    key={actor.id} 
+                    className={`cursor-pointer transition-all ${
+                      selectedActor === actor.id 
+                        ? 'bg-cyber-blue/20 border-cyber-blue/50' 
+                        : 'bg-white/5 border-white/10 hover:bg-white/10'
+                    }`}
+                    onClick={() => setSelectedActor(actor.id)}
+                  >
+                    <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
                             <Badge className={getConfidenceColor(actor.confidence)}>
-                              {actor.confidence.toUpperCase()} CONFIDENCE
+                              {actor.confidence.toUpperCase()}
                             </Badge>
                             <Badge variant="outline" className="border-white/20 text-white/60">
                               {origins.find(o => o.id === actor.origin)?.flag} {origins.find(o => o.id === actor.origin)?.name}
                             </Badge>
-                            <span className="text-white/40 text-sm">
-                              Active since {actor.firstSeen}
-                            </span>
                           </div>
-                          <CardTitle className="text-white group-hover:text-cyber-blue transition-colors">
+                          <CardTitle className={`transition-colors ${
+                            selectedActor === actor.id ? 'text-cyber-blue' : 'text-white'
+                          }`}>
                             {actor.primaryName}
                           </CardTitle>
-                          <CardDescription className="text-white/70 mt-2">
-                            {actor.description}
+                          <CardDescription className="text-white/70 mt-1 text-sm">
+                            {actor.aliases.join(', ')}
                           </CardDescription>
                         </div>
                       </div>
                     </CardHeader>
-                    <CardContent>
-                      <div className="space-y-6">
-                        {/* Aliases */}
-                        <div>
-                          <h4 className="text-white font-medium mb-2 flex items-center">
-                            <Users className="w-4 h-4 mr-2" />
-                            Known Aliases
-                          </h4>
-                          <div className="flex flex-wrap gap-2">
-                            {actor.aliases.map((alias) => (
-                              <Badge key={alias} variant="outline" className="border-cyber-blue/30 text-cyber-blue bg-cyber-blue/10 text-xs">
-                                {alias}
-                              </Badge>
-                            ))}
+                    <CardContent className="pt-0">
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex gap-4">
+                          <div>
+                            <span className="text-white/60">Campaigns: </span>
+                            <span className="text-cyber-blue font-medium">{actor.campaigns}</span>
+                          </div>
+                          <div>
+                            <span className="text-white/60">Since: </span>
+                            <span className="text-white font-medium">{actor.firstSeen}</span>
                           </div>
                         </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
 
+            {/* Right Column - Selected Actor Details */}
+            <div className="space-y-6 overflow-y-auto h-full pl-4">
+              {selectedActorData ? (
+                <>
+                  {/* Actor Overview */}
+                  <Card className="bg-white/5 border-white/10">
+                    <CardHeader>
+                      <CardTitle className="text-white text-xl">{selectedActorData.primaryName}</CardTitle>
+                      <CardDescription className="text-white/70">
+                        {selectedActorData.description}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
                         {/* Vendor Crosswalk */}
                         <div>
                           <h4 className="text-white font-medium mb-2 flex items-center">
                             <Eye className="w-4 h-4 mr-2" />
                             Vendor Attribution
                           </h4>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                            {Object.entries(actor.vendors).map(([vendor, name]) => (
+                          <div className="grid grid-cols-2 gap-3">
+                            {Object.entries(selectedActorData.vendors).map(([vendor, name]) => (
                               <div key={vendor} className="p-2 bg-white/5 rounded border border-white/10">
                                 <div className="text-xs text-white/60 mb-1">{vendor}</div>
                                 <div className="text-sm text-white font-medium">{name}</div>
@@ -333,423 +346,161 @@ const IntrusionSetCrosswalk = () => {
                             Targeted Sectors
                           </h4>
                           <div className="flex flex-wrap gap-2">
-                            {actor.sectors.map((sector) => (
+                            {selectedActorData.sectors.map((sector) => (
                               <Badge key={sector} variant="outline" className="border-cyber-amber/30 text-cyber-amber bg-cyber-amber/10 text-xs">
                                 {sector}
                               </Badge>
                             ))}
                           </div>
                         </div>
-
-                        {/* Stats and Actions */}
-                        <div className="flex items-center justify-between pt-4 border-t border-white/10">
-                          <div className="flex gap-6 text-sm">
-                            <div>
-                              <span className="text-white/60">Campaigns: </span>
-                              <span className="text-cyber-blue font-medium">{actor.campaigns}</span>
-                            </div>
-                            <div>
-                              <span className="text-white/60">Victims: </span>
-                              <span className="text-cyber-blue font-medium">{actor.victims}</span>
-                            </div>
-                            <div>
-                              <span className="text-white/60">Last Activity: </span>
-                              <span className="text-white font-medium">{actor.lastActivity}</span>
-                            </div>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button size="sm" variant="outline" className="border-white/20 text-white/80 hover:bg-white/10">
-                              <FileText className="w-3 h-3 mr-1" />
-                              Report
-                            </Button>
-                            <Button size="sm" className="bg-cyber-blue hover:bg-cyber-blue/80">
-                              View Profile
-                            </Button>
-                          </div>
-                        </div>
                       </div>
                     </CardContent>
                   </Card>
-                ))}
-              </div>
-            </TabsContent>
 
-            <TabsContent value="campaigns" className="mt-8">
-              <div className="space-y-6">
-                {/* Campaign Stats Overview */}
-                <div className="grid md:grid-cols-3 gap-6 mb-8">
-                  <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
-                    <CardHeader>
-                      <CardTitle className="text-white text-lg">Active Campaigns</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-3xl font-bold text-cyber-blue mb-2">167</div>
-                      <p className="text-white/60 text-sm">Currently tracking</p>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
-                    <CardHeader>
-                      <CardTitle className="text-white text-lg">High Priority</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-3xl font-bold text-red-400 mb-2">23</div>
-                      <p className="text-white/60 text-sm">Critical infrastructure targets</p>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
-                    <CardHeader>
-                      <CardTitle className="text-white text-lg">New This Month</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-3xl font-bold text-cyber-amber mb-2">8</div>
-                      <p className="text-white/60 text-sm">Emerging threats</p>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Detailed Campaign Cards */}
-                <div className="space-y-6">
-                  {campaigns.map((campaign) => (
-                    <Card key={campaign.id} className="bg-white/5 border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all">
-                      <CardHeader>
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <CardTitle className="text-white text-xl">{campaign.name}</CardTitle>
-                            <CardDescription className="text-white/70 mt-2">
-                              Attributed to: <Badge variant="outline" className="border-cyber-blue/30 text-cyber-blue ml-1">{campaign.threatActor}</Badge>
-                            </CardDescription>
-                          </div>
-                          <Badge 
-                            variant={campaign.status === 'Active' ? 'destructive' : 'secondary'}
-                            className={campaign.status === 'Active' ? 'bg-red-500/20 text-red-400 border-red-500/30' : 'bg-green-500/20 text-green-400 border-green-500/30'}
-                          >
-                            {campaign.status}
-                          </Badge>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-white/80 mb-4">{campaign.description}</p>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                          <div>
-                            <div className="text-sm text-white/60">Start Date</div>
-                            <div className="text-white font-medium">{campaign.startDate}</div>
-                          </div>
-                          <div>
-                            <div className="text-sm text-white/60">End Date</div>
-                            <div className="text-white font-medium">{campaign.endDate}</div>
-                          </div>
-                          <div>
-                            <div className="text-sm text-white/60">Targets</div>
-                            <div className="text-white font-medium">{campaign.targets.length} organizations</div>
-                          </div>
-                        </div>
-                        
-                        <div>
-                          <div className="text-sm text-white/60 mb-2">Primary Targets</div>
-                          <div className="flex flex-wrap gap-2">
-                            {campaign.targets.map((target) => (
-                              <Badge key={target} variant="outline" className="border-cyber-amber/30 text-cyber-amber bg-cyber-amber/10 text-xs">
-                                {target}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="attribution" className="mt-8">
-              <div className="space-y-6">
-                {/* Attribution Overview */}
-                <div className="grid md:grid-cols-2 gap-6">
-                  <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
+                  {/* Campaigns */}
+                  <Card className="bg-white/5 border-white/10">
                     <CardHeader>
                       <CardTitle className="text-white flex items-center">
-                        <MapPin className="w-5 h-5 mr-2 text-cyber-blue" />
-                        Geographic Distribution
+                        <Target className="w-5 h-5 mr-2 text-cyber-blue" />
+                        Associated Campaigns
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-4">
-                        {origins.filter(o => o.id !== "all").map((origin) => (
-                          <div key={origin.id} className="flex justify-between items-center">
-                            <span className="text-white/80 flex items-center">
-                              <span className="mr-2">{origin.flag}</span>
-                              {origin.name}
-                            </span>
-                            <div className="flex items-center gap-2">
-                              <div className="w-20 h-2 bg-white/10 rounded">
-                                <div 
-                                  className="h-full bg-cyber-blue rounded" 
-                                  style={{ width: `${(origin.count / 156) * 100}%` }}
-                                />
+                      {selectedActorCampaigns.length > 0 ? (
+                        <div className="space-y-4">
+                          {selectedActorCampaigns.map((campaign) => (
+                            <div key={campaign.id} className="p-4 bg-black/20 rounded border border-white/10">
+                              <div className="flex items-start justify-between mb-2">
+                                <div>
+                                  <h5 className="text-white font-medium">{campaign.name}</h5>
+                                  <p className="text-white/70 text-sm mt-1">{campaign.description}</p>
+                                </div>
+                                <Badge 
+                                  variant={campaign.status === 'Active' ? 'destructive' : 'secondary'}
+                                  className={campaign.status === 'Active' ? 'bg-red-500/20 text-red-400 border-red-500/30' : 'bg-green-500/20 text-green-400 border-green-500/30'}
+                                >
+                                  {campaign.status}
+                                </Badge>
                               </div>
-                              <span className="text-cyber-blue text-sm font-medium">{origin.count}</span>
+                              <div className="flex justify-between text-sm text-white/60 mb-2">
+                                <span>{campaign.startDate} - {campaign.endDate}</span>
+                                <span>{campaign.targets.length} targets</span>
+                              </div>
+                              <div className="flex flex-wrap gap-1">
+                                {campaign.targets.slice(0, 3).map((target) => (
+                                  <Badge key={target} variant="outline" className="border-cyber-amber/30 text-cyber-amber bg-cyber-amber/10 text-xs">
+                                    {target}
+                                  </Badge>
+                                ))}
+                                {campaign.targets.length > 3 && (
+                                  <Badge variant="outline" className="border-white/20 text-white/60 text-xs">
+                                    +{campaign.targets.length - 3} more
+                                  </Badge>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        ))}
-                      </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8 text-white/60">
+                          No campaigns associated with this threat actor
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
 
-                  <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
+                  {/* Attribution Analysis */}
+                  <Card className="bg-white/5 border-white/10">
                     <CardHeader>
                       <CardTitle className="text-white flex items-center">
-                        <TrendingUp className="w-5 h-5 mr-2 text-cyber-amber" />
-                        Attribution Confidence
+                        <MapPin className="w-5 h-5 mr-2 text-cyber-amber" />
+                        Attribution Analysis
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-4">
-                        <div className="flex justify-between items-center">
-                          <span className="text-white/80">High Confidence</span>
-                          <Badge className="bg-green-500/20 text-green-400">312 groups</Badge>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-white/80">Medium Confidence</span>
-                          <Badge className="bg-yellow-500/20 text-yellow-400">189 groups</Badge>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-white/80">Low Confidence</span>
-                          <Badge className="bg-red-500/20 text-red-400">46 groups</Badge>
+                        <div className="grid grid-cols-3 gap-4">
+                          <div className="p-3 bg-gradient-to-r from-green-500/10 to-green-600/10 border border-green-500/20 rounded-lg text-center">
+                            <div className="text-sm text-green-400 font-medium">Confidence</div>
+                            <div className="text-xl text-white font-bold">{selectedActorData.confidence}</div>
+                          </div>
+                          <div className="p-3 bg-gradient-to-r from-blue-500/10 to-blue-600/10 border border-blue-500/20 rounded-lg text-center">
+                            <div className="text-sm text-blue-400 font-medium">Vendors</div>
+                            <div className="text-xl text-white font-bold">{Object.keys(selectedActorData.vendors).length}</div>
+                          </div>
+                          <div className="p-3 bg-gradient-to-r from-amber-500/10 to-amber-600/10 border border-amber-500/20 rounded-lg text-center">
+                            <div className="text-sm text-amber-400 font-medium">Active Since</div>
+                            <div className="text-xl text-white font-bold">{selectedActorData.firstSeen}</div>
+                          </div>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
+
+                  {/* Relationships */}
+                  <Card className="bg-white/5 border-white/10">
+                    <CardHeader>
+                      <CardTitle className="text-white flex items-center">
+                        <Network className="w-5 h-5 mr-2 text-cyber-blue" />
+                        Relationships
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {selectedActorRelationships.length > 0 ? (
+                        <div className="space-y-4">
+                          {selectedActorRelationships.map((rel) => (
+                            <div key={rel.id} className="p-4 bg-black/20 rounded border border-white/10">
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-3">
+                                  <Badge variant="outline" className={`${
+                                    rel.source === selectedActorData.primaryName 
+                                      ? 'border-cyber-blue/30 text-cyber-blue bg-cyber-blue/10' 
+                                      : 'border-cyber-amber/30 text-cyber-amber bg-cyber-amber/10'
+                                  }`}>
+                                    {rel.source}
+                                  </Badge>
+                                  <GitBranch className="h-4 w-4 text-white/60" />
+                                  <Badge variant="outline" className={`${
+                                    rel.target === selectedActorData.primaryName 
+                                      ? 'border-cyber-blue/30 text-cyber-blue bg-cyber-blue/10' 
+                                      : 'border-cyber-amber/30 text-cyber-amber bg-cyber-amber/10'
+                                  }`}>
+                                    {rel.target}
+                                  </Badge>
+                                </div>
+                                <Badge 
+                                  className={`${
+                                    rel.confidence === 'High' 
+                                      ? 'bg-green-500/20 text-green-400 border-green-500/30' 
+                                      : 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
+                                  }`}
+                                >
+                                  {rel.confidence} Confidence
+                                </Badge>
+                              </div>
+                              <div className="text-sm text-white/80 mb-2">{rel.relationship}</div>
+                              <div className="text-xs text-white/60">{rel.description}</div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8 text-white/60">
+                          No relationships found for this threat actor
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </>
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center text-white/60">
+                    <Users className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                    <p>Select a threat actor to view details</p>
+                  </div>
                 </div>
-
-                {/* Cross-Vendor Attribution Analysis */}
-                <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
-                  <CardHeader>
-                    <CardTitle className="text-white">Cross-Vendor Attribution Analysis</CardTitle>
-                    <CardDescription className="text-white/70">
-                      Correlation and confidence scoring across 14 cybersecurity vendor taxonomies
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-6">
-                      {/* Vendor Grid */}
-                      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-                        {vendorTaxonomies.map((vendor) => (
-                          <div key={vendor} className="p-3 bg-black/20 rounded border border-white/10 text-center hover:bg-white/5 transition-colors">
-                            <div className="text-xs text-white/60 mb-1">{vendor}</div>
-                            <div className="text-green-400 text-sm font-medium">✓ Active</div>
-                          </div>
-                        ))}
-                      </div>
-                      
-                      {/* Consensus Scoring */}
-                      <div className="grid md:grid-cols-3 gap-4">
-                        <div className="p-4 bg-gradient-to-r from-blue-500/10 to-blue-600/10 border border-blue-500/20 rounded-lg">
-                          <div className="text-sm text-blue-400 font-medium mb-2">Overall Consensus</div>
-                          <div className="text-2xl text-white font-bold">87%</div>
-                          <div className="text-xs text-white/60">High confidence attribution</div>
-                        </div>
-                        
-                        <div className="p-4 bg-gradient-to-r from-green-500/10 to-green-600/10 border border-green-500/20 rounded-lg">
-                          <div className="text-sm text-green-400 font-medium mb-2">Vendor Agreement</div>
-                          <div className="text-2xl text-white font-bold">12/14</div>
-                          <div className="text-xs text-white/60">Vendors in consensus</div>
-                        </div>
-                        
-                        <div className="p-4 bg-gradient-to-r from-amber-500/10 to-amber-600/10 border border-amber-500/20 rounded-lg">
-                          <div className="text-sm text-amber-400 font-medium mb-2">Update Frequency</div>
-                          <div className="text-2xl text-white font-bold">Daily</div>
-                          <div className="text-xs text-white/60">Real-time correlation</div>
-                        </div>
-                      </div>
-
-                      {/* Attribution Details */}
-                      <div className="space-y-3">
-                        <h4 className="text-white font-medium">Attribution Methodology</h4>
-                        <div className="grid md:grid-cols-2 gap-4 text-sm">
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-2 text-white/80">
-                              <div className="w-2 h-2 bg-cyber-blue rounded-full"></div>
-                              <span>TTP correlation analysis</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-white/80">
-                              <div className="w-2 h-2 bg-cyber-blue rounded-full"></div>
-                              <span>Infrastructure overlap detection</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-white/80">
-                              <div className="w-2 h-2 bg-cyber-blue rounded-full"></div>
-                              <span>Malware family analysis</span>
-                            </div>
-                          </div>
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-2 text-white/80">
-                              <div className="w-2 h-2 bg-cyber-amber rounded-full"></div>
-                              <span>Timing pattern correlation</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-white/80">
-                              <div className="w-2 h-2 bg-cyber-amber rounded-full"></div>
-                              <span>Target sector analysis</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-white/80">
-                              <div className="w-2 h-2 bg-cyber-amber rounded-full"></div>
-                              <span>Geopolitical context assessment</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="relationships" className="mt-8">
-              <div className="space-y-6">
-                {/* Header with Network Graph Button */}
-                <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <CardTitle className="text-white flex items-center">
-                          <Network className="w-5 h-5 mr-2 text-cyber-blue" />
-                          Relationship Mapping
-                        </CardTitle>
-                        <CardDescription className="text-white/70">
-                          Interactive visualization of threat actor relationships and affiliations
-                        </CardDescription>
-                      </div>
-                      <Button className="bg-gradient-to-r from-cyber-blue to-cyber-amber hover:from-cyber-blue/80 hover:to-cyber-amber/80">
-                        <Network className="h-4 w-4 mr-2" />
-                        View Network Graph
-                      </Button>
-                    </div>
-                  </CardHeader>
-                </Card>
-
-                {/* Relationship Cards */}
-                <div className="space-y-4">
-                  {relationships.map((rel) => (
-                    <Card key={rel.id} className="bg-white/5 border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all">
-                      <CardContent className="p-6">
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex items-center gap-4">
-                            <Badge variant="outline" className="border-cyber-blue/30 text-cyber-blue bg-cyber-blue/10 px-3 py-1">
-                              {rel.source}
-                            </Badge>
-                            <div className="flex items-center gap-2 text-white/60">
-                              <GitBranch className="h-4 w-4" />
-                              <span className="text-sm">{rel.relationship}</span>
-                            </div>
-                            <Badge variant="outline" className="border-cyber-amber/30 text-cyber-amber bg-cyber-amber/10 px-3 py-1">
-                              {rel.target}
-                            </Badge>
-                          </div>
-                          <Badge 
-                            className={`${
-                              rel.confidence === 'High' 
-                                ? 'bg-green-500/20 text-green-400 border-green-500/30' 
-                                : rel.confidence === 'Medium'
-                                ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
-                                : 'bg-red-500/20 text-red-400 border-red-500/30'
-                            }`}
-                          >
-                            {rel.confidence} Confidence
-                          </Badge>
-                        </div>
-                        
-                        <p className="text-white/80 mb-3">{rel.description}</p>
-                        
-                        <div className="space-y-2">
-                          <div className="text-sm text-white/60">Evidence:</div>
-                          <div className="flex flex-wrap gap-2">
-                            {rel.evidence.map((evidence, index) => (
-                              <Badge key={index} variant="outline" className="border-white/20 text-white/70 text-xs">
-                                {evidence}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-
-                {/* Network Visualization Placeholder */}
-                <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
-                  <CardHeader>
-                    <CardTitle className="text-white">Interactive Network Visualization</CardTitle>
-                    <CardDescription className="text-white/70">
-                      Dynamic graph showing threat actor connections and relationship strength
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="h-96 bg-black/20 rounded border border-white/10 flex items-center justify-center relative overflow-hidden">
-                      {/* Simulated Network Nodes */}
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="relative">
-                          {/* Central APT1 Node */}
-                          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                            <div className="w-16 h-16 bg-cyber-blue/30 border-2 border-cyber-blue rounded-full flex items-center justify-center">
-                              <span className="text-cyber-blue font-bold text-xs">APT1</span>
-                            </div>
-                          </div>
-                          
-                          {/* APT40 Node */}
-                          <div className="absolute top-16 left-32 transform -translate-x-1/2 -translate-y-1/2">
-                            <div className="w-12 h-12 bg-cyber-amber/30 border-2 border-cyber-amber rounded-full flex items-center justify-center">
-                              <span className="text-cyber-amber font-bold text-xs">APT40</span>
-                            </div>
-                            {/* Connection Line */}
-                            <div className="absolute bottom-4 right-4 w-16 h-0.5 bg-gradient-to-r from-cyber-amber to-cyber-blue transform rotate-45 opacity-60"></div>
-                          </div>
-                          
-                          {/* Cozy Bear Node */}
-                          <div className="absolute top-32 left-0 transform -translate-x-1/2 -translate-y-1/2">
-                            <div className="w-12 h-12 bg-red-500/30 border-2 border-red-500 rounded-full flex items-center justify-center">
-                              <span className="text-red-400 font-bold text-xs">CB</span>
-                            </div>
-                            {/* Connection Line */}
-                            <div className="absolute bottom-0 right-8 w-20 h-0.5 bg-gradient-to-r from-red-500 to-cyber-blue transform rotate-12 opacity-40"></div>
-                          </div>
-                          
-                          {/* Lazarus Node */}
-                          <div className="absolute top-4 right-0 transform -translate-x-1/2 -translate-y-1/2">
-                            <div className="w-10 h-10 bg-purple-500/30 border-2 border-purple-500 rounded-full flex items-center justify-center">
-                              <span className="text-purple-400 font-bold text-xs">LZ</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Overlay Info */}
-                      <div className="absolute bottom-4 left-4 text-white/60">
-                        <div className="text-sm">Node size indicates campaign volume</div>
-                        <div className="text-xs">Line thickness shows relationship strength</div>
-                      </div>
-                      
-                      {/* Legend */}
-                      <div className="absolute top-4 right-4 space-y-2">
-                        <div className="flex items-center gap-2 text-xs">
-                          <div className="w-3 h-3 bg-cyber-blue rounded-full"></div>
-                          <span className="text-white/60">High Volume</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-xs">
-                          <div className="w-2 h-2 bg-cyber-amber rounded-full"></div>
-                          <span className="text-white/60">Medium Volume</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-xs">
-                          <div className="w-1 h-1 bg-purple-500 rounded-full"></div>
-                          <span className="text-white/60">Low Volume</span>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-          </Tabs>
+              )}
+            </div>
+          </div>
         </div>
       </section>
     </div>
