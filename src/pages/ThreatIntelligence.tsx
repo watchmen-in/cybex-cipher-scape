@@ -10,6 +10,7 @@ import { useState } from "react";
 const ThreatIntelligence = () => {
   const [selectedSector, setSelectedSector] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedThreat, setSelectedThreat] = useState(null);
 
   const sectors = [
     { id: "all", name: "All Sectors", icon: Globe },
@@ -172,181 +173,207 @@ const ThreatIntelligence = () => {
         </div>
       </section>
 
-      {/* Main Content */}
+      {/* Main Content - Two Column Layout */}
       <section className="py-12">
         <div className="container mx-auto px-6">
-          <Tabs defaultValue="feeds" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 bg-white/5 border border-white/10">
-              <TabsTrigger value="feeds" className="data-[state=active]:bg-cyber-blue data-[state=active]:text-white">
-                <AlertTriangle className="w-4 h-4 mr-2" />
-                Live Feeds
-              </TabsTrigger>
-              <TabsTrigger value="analysis" className="data-[state=active]:bg-cyber-blue data-[state=active]:text-white">
-                <TrendingUp className="w-4 h-4 mr-2" />
-                AI Analysis
-              </TabsTrigger>
-              <TabsTrigger value="dashboard" className="data-[state=active]:bg-cyber-blue data-[state=active]:text-white">
-                <Shield className="w-4 h-4 mr-2" />
-                Threat Dashboard
-              </TabsTrigger>
-            </TabsList>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 min-h-[600px]">
+            
+            {/* Left Column - Threat Intelligence List */}
+            <div className="lg:col-span-1">
+              <Card className="bg-white/5 border-white/10 backdrop-blur-sm h-full">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-white flex items-center">
+                    <AlertTriangle className="w-5 h-5 mr-2 text-cyber-blue" />
+                    Live Threat Feeds
+                  </CardTitle>
+                  <CardDescription className="text-white/70">
+                    Select a threat to view detailed analysis
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <ScrollArea className="h-[500px]">
+                    <div className="space-y-2 p-6 pt-0">
+                      {filteredFeeds.map((feed) => (
+                        <Card 
+                          key={feed.id} 
+                          className={`cursor-pointer transition-all border ${
+                            selectedThreat?.id === feed.id 
+                              ? 'bg-cyber-blue/20 border-cyber-blue/50' 
+                              : 'bg-white/5 border-white/10 hover:bg-white/10'
+                          }`}
+                          onClick={() => setSelectedThreat(feed)}
+                        >
+                          <CardContent className="p-4">
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2">
+                                <Badge className={getSeverityColor(feed.severity)}>
+                                  {feed.severity.toUpperCase()}
+                                </Badge>
+                                <div className="flex items-center text-white/40 text-xs">
+                                  <Clock className="w-3 h-3 mr-1" />
+                                  {feed.timestamp}
+                                </div>
+                              </div>
+                              <h3 className="text-white font-medium text-sm leading-tight line-clamp-2">
+                                {feed.title}
+                              </h3>
+                              <Badge variant="outline" className="border-white/20 text-white/60 text-xs">
+                                {sectors.find(s => s.id === feed.sector)?.name}
+                              </Badge>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+            </div>
 
-            <TabsContent value="feeds" className="mt-8">
-              <div className="grid gap-6">
-                {filteredFeeds.map((feed) => (
-                  <Card key={feed.id} className="bg-white/5 border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all group">
+            {/* Right Column - Detailed View */}
+            <div className="lg:col-span-2">
+              {selectedThreat ? (
+                <div className="space-y-6">
+                  {/* Threat Details Card */}
+                  <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
                     <CardHeader>
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <Badge className={getSeverityColor(feed.severity)}>
-                              {feed.severity.toUpperCase()}
+                          <div className="flex items-center gap-3 mb-3">
+                            <Badge className={getSeverityColor(selectedThreat.severity)}>
+                              {selectedThreat.severity.toUpperCase()}
                             </Badge>
                             <Badge variant="outline" className="border-white/20 text-white/60">
-                              {sectors.find(s => s.id === feed.sector)?.name}
+                              {sectors.find(s => s.id === selectedThreat.sector)?.name}
                             </Badge>
                             <div className="flex items-center text-white/40 text-sm">
-                              <Clock className="w-3 h-3 mr-1" />
-                              {feed.timestamp}
+                              <Clock className="w-4 h-4 mr-1" />
+                              {selectedThreat.timestamp}
                             </div>
                           </div>
-                          <CardTitle className="text-white group-hover:text-cyber-blue transition-colors">
-                            {feed.title}
+                          <CardTitle className="text-white text-xl mb-3">
+                            {selectedThreat.title}
                           </CardTitle>
-                          <CardDescription className="text-white/70 mt-2">
-                            {feed.description}
+                          <CardDescription className="text-white/80 text-base">
+                            {selectedThreat.description}
                           </CardDescription>
                         </div>
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-4">
-                        {/* AI Summary */}
-                        <div className="p-4 bg-cyber-blue/10 rounded-lg border border-cyber-blue/20">
-                          <h4 className="text-cyber-blue font-medium mb-2 flex items-center">
-                            <TrendingUp className="w-4 h-4 mr-2" />
-                            AI Analysis Summary
-                          </h4>
-                          <p className="text-white/80 text-sm">{feed.aiSummary}</p>
-                        </div>
+                      <div className="flex items-center justify-between pt-2 border-t border-white/10">
+                        <span className="text-white/60">Source: {selectedThreat.source}</span>
+                        <Button className="bg-cyber-blue hover:bg-cyber-blue/80">
+                          View Full Report
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
 
-                        {/* Indicators */}
-                        <div>
-                          <h4 className="text-white font-medium mb-2 flex items-center">
-                            <AlertTriangle className="w-4 h-4 mr-2" />
-                            Threat Indicators
-                          </h4>
-                          <div className="flex flex-wrap gap-2">
-                            {feed.indicators.map((indicator, index) => (
-                              <Badge key={index} variant="outline" className="border-cyber-amber/30 text-cyber-amber bg-cyber-amber/10 font-mono text-xs">
-                                {indicator}
-                              </Badge>
-                            ))}
+                  {/* AI Analysis Card */}
+                  <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
+                    <CardHeader>
+                      <CardTitle className="text-white flex items-center">
+                        <TrendingUp className="w-5 h-5 mr-2 text-cyber-blue" />
+                        AI Analysis & Recommendations
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="p-4 bg-cyber-blue/10 rounded-lg border border-cyber-blue/20">
+                        <p className="text-white/90">{selectedThreat.aiSummary}</p>
+                      </div>
+                      <div className="mt-4 flex gap-2">
+                        <Button size="sm" variant="outline" className="border-cyber-blue/30 text-cyber-blue hover:bg-cyber-blue/10">
+                          Export Analysis
+                        </Button>
+                        <Button size="sm" variant="outline" className="border-cyber-amber/30 text-cyber-amber hover:bg-cyber-amber/10">
+                          Share Alert
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Threat Indicators Card */}
+                  <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
+                    <CardHeader>
+                      <CardTitle className="text-white flex items-center">
+                        <AlertTriangle className="w-5 h-5 mr-2 text-cyber-amber" />
+                        Threat Indicators (IOCs)
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {selectedThreat.indicators.map((indicator, index) => (
+                          <div key={index} className="p-3 bg-cyber-amber/10 rounded-lg border border-cyber-amber/20">
+                            <code className="text-cyber-amber text-sm font-mono break-all">
+                              {indicator}
+                            </code>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-4 flex gap-2">
+                        <Button size="sm" variant="outline" className="border-cyber-amber/30 text-cyber-amber hover:bg-cyber-amber/10">
+                          Copy All IOCs
+                        </Button>
+                        <Button size="sm" variant="outline" className="border-white/20 text-white/80 hover:bg-white/10">
+                          Download STIX
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Response Actions Card */}
+                  <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
+                    <CardHeader>
+                      <CardTitle className="text-white flex items-center">
+                        <Shield className="w-5 h-5 mr-2 text-cyber-orange" />
+                        Recommended Response Actions
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="flex items-start gap-3 p-3 bg-cyber-orange/10 rounded-lg border border-cyber-orange/20">
+                          <div className="w-6 h-6 bg-cyber-orange rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <span className="text-background text-xs font-bold">1</span>
+                          </div>
+                          <div>
+                            <h4 className="text-cyber-orange font-medium">Immediate Isolation</h4>
+                            <p className="text-white/80 text-sm">Isolate affected systems from network to prevent lateral movement</p>
                           </div>
                         </div>
-
-                        {/* Source */}
-                        <div className="flex items-center justify-between pt-2 border-t border-white/10">
-                          <span className="text-white/60 text-sm">Source: {feed.source}</span>
-                          <Button size="sm" className="bg-cyber-blue hover:bg-cyber-blue/80">
-                            View Details
-                          </Button>
+                        <div className="flex items-start gap-3 p-3 bg-cyber-blue/10 rounded-lg border border-cyber-blue/20">
+                          <div className="w-6 h-6 bg-cyber-blue rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <span className="text-background text-xs font-bold">2</span>
+                          </div>
+                          <div>
+                            <h4 className="text-cyber-blue font-medium">Block IOCs</h4>
+                            <p className="text-white/80 text-sm">Update firewall and security tools to block identified indicators</p>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-3 p-3 bg-cyber-amber/10 rounded-lg border border-cyber-amber/20">
+                          <div className="w-6 h-6 bg-cyber-amber rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <span className="text-background text-xs font-bold">3</span>
+                          </div>
+                          <div>
+                            <h4 className="text-cyber-amber font-medium">Deploy Patches</h4>
+                            <p className="text-white/80 text-sm">Apply security updates and patches to vulnerable systems</p>
+                          </div>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
-                ))}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="analysis" className="mt-8">
-              <div className="grid md:grid-cols-2 gap-6">
-                <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
-                  <CardHeader>
-                    <CardTitle className="text-white flex items-center">
-                      <TrendingUp className="w-5 h-5 mr-2 text-cyber-blue" />
-                      Threat Trends
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <span className="text-white/80">Ransomware Activity</span>
-                        <Badge className="bg-red-500/20 text-red-400">+23%</Badge>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-white/80">State-Sponsored APTs</span>
-                        <Badge className="bg-amber-500/20 text-amber-400">+15%</Badge>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-white/80">Supply Chain Attacks</span>
-                        <Badge className="bg-red-500/20 text-red-400">+31%</Badge>
-                      </div>
-                    </div>
+                </div>
+              ) : (
+                <Card className="bg-white/5 border-white/10 backdrop-blur-sm h-full flex items-center justify-center">
+                  <CardContent className="text-center">
+                    <AlertTriangle className="w-12 h-12 text-white/40 mx-auto mb-4" />
+                    <h3 className="text-white text-lg font-medium mb-2">Select a Threat Intelligence Feed</h3>
+                    <p className="text-white/60">Choose a threat from the list to view detailed analysis and recommendations</p>
                   </CardContent>
                 </Card>
-
-                <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
-                  <CardHeader>
-                    <CardTitle className="text-white flex items-center">
-                      <Shield className="w-5 h-5 mr-2 text-cyber-amber" />
-                      Sector Risk Assessment
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <span className="text-white/80">Energy</span>
-                        <Badge className="bg-red-500/20 text-red-400">CRITICAL</Badge>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-white/80">Healthcare</span>
-                        <Badge className="bg-amber-500/20 text-amber-400">HIGH</Badge>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-white/80">Financial</span>
-                        <Badge className="bg-amber-500/20 text-amber-400">HIGH</Badge>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="dashboard" className="mt-8">
-              <div className="grid md:grid-cols-3 gap-6">
-                <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
-                  <CardHeader>
-                    <CardTitle className="text-white text-lg">Active Threats</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold text-cyber-blue mb-2">247</div>
-                    <p className="text-white/60 text-sm">+12 in last hour</p>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
-                  <CardHeader>
-                    <CardTitle className="text-white text-lg">Critical Alerts</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold text-red-400 mb-2">23</div>
-                    <p className="text-white/60 text-sm">Requiring immediate action</p>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
-                  <CardHeader>
-                    <CardTitle className="text-white text-lg">Sectors at Risk</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold text-cyber-amber mb-2">6</div>
-                    <p className="text-white/60 text-sm">Of 7 monitored sectors</p>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-          </Tabs>
+              )}
+            </div>
+          </div>
         </div>
       </section>
     </div>
