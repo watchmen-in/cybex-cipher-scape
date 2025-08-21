@@ -23,14 +23,26 @@ const HeroSection = () => {
       <div className="relative z-10 container mx-auto px-6">
         <div className="max-w-2xl">
           <h1 className="text-6xl lg:text-7xl font-bold text-white mb-6 text-shadow leading-tight">
-            Lights Across
-            <span className="block text-cyber-amber">The Grid</span>
+            Lights Across the Grid.
+            <span className="block text-cyber-amber">Defense Across the Nation.</span>
           </h1>
           
-          <p className="text-xl text-white/80 mb-8 leading-relaxed">
-            Advanced cybersecurity intelligence protecting critical infrastructure 
-            from emerging digital threats across the nation's power grid.
-          </p>
+          <div className="space-y-4 mb-8">
+            <ul className="text-xl text-white/80 space-y-2">
+              <li className="flex items-start gap-3">
+                <span className="text-cyber-amber mt-1">•</span>
+                Real-time intelligence for critical infrastructure
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="text-cyber-amber mt-1">•</span>
+                Proactive defense against nation-state threats
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="text-cyber-amber mt-1">•</span>
+                Veteran-owned. Mission-driven. Built for resilience
+              </li>
+            </ul>
+          </div>
           
           <Button 
             size="lg" 

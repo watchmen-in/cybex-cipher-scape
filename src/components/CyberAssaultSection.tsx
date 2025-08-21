@@ -38,11 +38,10 @@ const CyberAssaultSection = () => {
         {/* Section Title */}
         <div className="text-center mb-16">
           <h2 className="text-5xl font-bold text-white text-shadow mb-4">
-            Cyber Assault on
-            <span className="block text-cyber-salmon">Critical Systems</span>
+            Unfolding Crisis
           </h2>
           <p className="text-xl text-white/70 max-w-2xl mx-auto">
-            Real-time threat intelligence revealing coordinated attacks on national infrastructure
+            Real-time analysis reveals coordinated attack patterns across multiple targets.
           </p>
         </div>
         

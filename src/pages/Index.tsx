@@ -2,6 +2,7 @@ import Navigation from "@/components/Navigation";
 import HeroSection from "@/components/HeroSection";
 import StraplineSection from "@/components/StraplineSection";
 import CyberAssaultSection from "@/components/CyberAssaultSection";
+import CriticalInfrastructureWheel from "@/components/CriticalInfrastructureWheel";
 import NetworkMosaicSection from "@/components/NetworkMosaicSection";
 import CrisisPortraitSection from "@/components/CrisisPortraitSection";
 import HomelandSection from "@/components/HomelandSection";
@@ -14,6 +15,7 @@ const Index = () => {
       <HeroSection />
       <StraplineSection />
       <CyberAssaultSection />
+      <CriticalInfrastructureWheel />
       <NetworkMosaicSection />
       <CrisisPortraitSection />
       <HomelandSection />
