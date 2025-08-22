@@ -9,8 +9,17 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
   },
+  build: {
+    target: 'esnext',
+  },
+  esbuild: {
+    jsx: 'automatic',
+    jsxDev: true,
+  },
   plugins: [
-    react(),
+    react({
+      jsxImportSource: 'react',
+    }),
     mode === 'development' &&
     componentTagger(),
   ].filter(Boolean),
@@ -18,5 +27,8 @@ export default defineConfig(({ mode }) => ({
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
+  },
+  define: {
+    __DEV__: mode === 'development',
   },
 }));
