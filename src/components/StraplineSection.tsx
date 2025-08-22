@@ -1,6 +1,11 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import HealthMonitor from "./HealthMonitor";
+import { Activity } from "lucide-react";
 
 const StraplineSection = () => {
+  const [showHealthMonitor, setShowHealthMonitor] = useState(false);
+
   return (
     <section className="py-12 bg-gradient-to-r from-background via-background/95 to-background border-y border-white/10">
       <div className="container mx-auto px-6">
@@ -33,8 +38,22 @@ const StraplineSection = () => {
           >
             Get Free Government Resources Guide
           </Button>
+          <Button 
+            variant="outline" 
+            size="lg"
+            onClick={() => setShowHealthMonitor(true)}
+            className="border-green-400/30 text-green-400 hover:bg-green-400 hover:text-background rounded-full px-8 py-3"
+          >
+            <Activity className="w-4 h-4 mr-2" />
+            Feed Health
+          </Button>
         </div>
       </div>
+
+      <HealthMonitor 
+        isOpen={showHealthMonitor} 
+        onClose={() => setShowHealthMonitor(false)} 
+      />
     </section>
   );
 };
