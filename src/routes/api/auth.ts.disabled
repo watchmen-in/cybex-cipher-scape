@@ -1,0 +1,336 @@
+// Beautiful Authentication API Routes
+import { Hono } from 'hono';
+import { setCookie, deleteCookie, getCookie } from 'hono/cookie';
+import { AuthService } from '../../lib/auth-service';
+import type { Env } from '../../types';
+
+const app = new Hono<{ Bindings: Env }>();
+
+// Beautiful login endpoint
+app.post('/login', async (c) => {
+  try {
+    const { email, password, rememberMe } = await c.req.json();
+    
+    if (!email || !password) {
+      return c.json({
+        success: false,
+        error: 'Email and password are required',
+        field: !email ? 'email' : 'password'
+      }, 400);
+    }
+
+    const authService = new AuthService(c.env);
+    const result = await authService.authenticateUser(email, password, {
+      userAgent: c.req.header('User-Agent'),
+      ipAddress: c.req.header('CF-Connecting-IP') || 'unknown'
+    });
+
+    if (!result) {
+      return c.json({
+        success: false,
+        error: 'Invalid email or password',
+        field: 'password'
+      }, 401);
+    }
+
+    // Set beautiful session cookie
+    setCookie(c, 'auth_session', result.session.id, {
+      httpOnly: true,
+      secure: c.env.APP_ENV === 'production',
+      sameSite: 'Lax',
+      maxAge: rememberMe ? 60 * 60 * 24 * 30 : 60 * 60 * 24, // 30 days or 1 day
+      path: '/'
+    });
+
+    return c.json({
+      success: true,
+      message: 'Login successful',
+      user: {
+        id: result.user.id,
+        email: result.user.email,
+        username: result.user.username,
+        role: result.user.role,
+        avatar: result.user.avatar,
+        theme: result.user.theme
+      }
+    });
+
+  } catch (error) {
+    console.error('Login error:', error);
+    return c.json({
+      success: false,
+      error: 'Authentication failed',
+      message: error.message
+    }, 500);
+  }
+});
+
+// Beautiful registration endpoint
+app.post('/register', async (c) => {
+  try {
+    const { email, username, password, confirmPassword, role } = await c.req.json();
+    
+    // Beautiful validation
+    const validation = validateRegistration({ email, username, password, confirmPassword });
+    if (!validation.valid) {
+      return c.json({
+        success: false,
+        error: validation.error,
+        field: validation.field
+      }, 400);
+    }
+
+    const authService = new AuthService(c.env);
+    
+    // Check if user already exists
+    const existingUser = await c.env.CYDEX_DB
+      .prepare('SELECT id FROM users WHERE email = ? OR username = ?')
+      .bind(email, username)
+      .first();
+
+    if (existingUser) {
+      return c.json({
+        success: false,
+        error: 'User already exists with this email or username',
+        field: 'email'
+      }, 409);
+    }
+
+    const result = await authService.createUser({
+      email,
+      username,
+      password,
+      role: role || 'analyst',
+      theme: 'dark'
+    });
+
+    // Set session cookie
+    setCookie(c, 'auth_session', result.session.id, {
+      httpOnly: true,
+      secure: c.env.APP_ENV === 'production',
+      sameSite: 'Lax',
+      maxAge: 60 * 60 * 24, // 1 day
+      path: '/'
+    });
+
+    return c.json({
+      success: true,
+      message: 'Registration successful',
+      user: {
+        id: result.user.id,
+        email: result.user.email,
+        username: result.user.username,
+        role: result.user.role,
+        avatar: result.user.avatar,
+        theme: result.user.theme
+      }
+    });
+
+  } catch (error) {
+    console.error('Registration error:', error);
+    return c.json({
+      success: false,
+      error: 'Registration failed',
+      message: error.message
+    }, 500);
+  }
+});
+
+// Beautiful logout endpoint
+app.post('/logout', async (c) => {
+  try {
+    const sessionId = getCookie(c, 'auth_session');
+    
+    if (sessionId) {
+      const authService = new AuthService(c.env);
+      await authService.logout(sessionId);
+    }
+
+    deleteCookie(c, 'auth_session');
+
+    return c.json({
+      success: true,
+      message: 'Logout successful'
+    });
+
+  } catch (error) {
+    console.error('Logout error:', error);
+    return c.json({
+      success: false,
+      error: 'Logout failed'
+    }, 500);
+  }
+});
+
+// Get current user (beautiful profile)
+app.get('/me', async (c) => {
+  try {
+    const sessionId = getCookie(c, 'auth_session');
+    
+    if (!sessionId) {
+      return c.json({
+        success: false,
+        error: 'Not authenticated'
+      }, 401);
+    }
+
+    const authService = new AuthService(c.env);
+    const result = await authService.validateSession(sessionId);
+
+    if (!result) {
+      deleteCookie(c, 'auth_session');
+      return c.json({
+        success: false,
+        error: 'Session expired'
+      }, 401);
+    }
+
+    // Get user preferences for beautiful customization
+    const preferences = await authService.getUserPreferences(result.user.id);
+
+    return c.json({
+      success: true,
+      user: {
+        id: result.user.id,
+        email: result.user.email,
+        username: result.user.username,
+        role: result.user.role,
+        avatar: result.user.avatar,
+        theme: result.user.theme,
+        timezone: result.user.timezone,
+        created_at: result.user.created_at,
+        last_login: result.user.last_login
+      },
+      preferences,
+      session: {
+        id: result.session.id,
+        expiresAt: result.session.expiresAt
+      }
+    });
+
+  } catch (error) {
+    console.error('Get user error:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to get user profile'
+    }, 500);
+  }
+});
+
+// Update beautiful user profile
+app.put('/profile', async (c) => {
+  try {
+    const sessionId = getCookie(c, 'auth_session');
+    
+    if (!sessionId) {
+      return c.json({
+        success: false,
+        error: 'Not authenticated'
+      }, 401);
+    }
+
+    const authService = new AuthService(c.env);
+    const session = await authService.validateSession(sessionId);
+
+    if (!session) {
+      deleteCookie(c, 'auth_session');
+      return c.json({
+        success: false,
+        error: 'Session expired'
+      }, 401);
+    }
+
+    const updates = await c.req.json();
+    const updatedUser = await authService.updateUser(session.user.id, updates);
+
+    return c.json({
+      success: true,
+      message: 'Profile updated successfully',
+      user: updatedUser
+    });
+
+  } catch (error) {
+    console.error('Update profile error:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to update profile'
+    }, 500);
+  }
+});
+
+// Update beautiful preferences
+app.put('/preferences', async (c) => {
+  try {
+    const sessionId = getCookie(c, 'auth_session');
+    
+    if (!sessionId) {
+      return c.json({
+        success: false,
+        error: 'Not authenticated'
+      }, 401);
+    }
+
+    const authService = new AuthService(c.env);
+    const session = await authService.validateSession(sessionId);
+
+    if (!session) {
+      deleteCookie(c, 'auth_session');
+      return c.json({
+        success: false,
+        error: 'Session expired'
+      }, 401);
+    }
+
+    const preferences = await c.req.json();
+    await authService.saveUserPreferences(session.user.id, preferences);
+
+    return c.json({
+      success: true,
+      message: 'Preferences saved successfully',
+      preferences
+    });
+
+  } catch (error) {
+    console.error('Update preferences error:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to save preferences'
+    }, 500);
+  }
+});
+
+// Beautiful validation helper
+// Helper function to temporarily fix validation issues
+function validateRegistration(data: any) {
+  if (!data.email) {
+    return { valid: false, error: 'Email is required', field: 'email' };
+  }
+  
+  if (!data.email.includes('@')) {
+    return { valid: false, error: 'Please enter a valid email address', field: 'email' };
+  }
+
+  if (!data.username) {
+    return { valid: false, error: 'Username is required', field: 'username' };
+  }
+
+  if (data.username.length < 3) {
+    return { valid: false, error: 'Username must be at least 3 characters', field: 'username' };
+  }
+
+  if (!data.password) {
+    return { valid: false, error: 'Password is required', field: 'password' };
+  }
+
+  if (data.password.length < 6) {
+    return { valid: false, error: 'Password must be at least 6 characters', field: 'password' };
+  }
+
+  if (data.password !== data.confirmPassword) {
+    return { valid: false, error: 'Passwords do not match', field: 'confirmPassword' };
+  }
+
+  return { valid: true };
+}
+
+export default app;

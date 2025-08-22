@@ -1,0 +1,150 @@
+import { Lucia } from 'lucia';
+import { D1Adapter } from '@lucia-auth/adapter-sqlite';
+import type { Env, User } from '../types';
+
+export function initializeLucia(env: Env) {
+  const adapter = new D1Adapter(env.CYDEX_DB, {
+    user: 'users',
+    session: 'sessions',
+  });
+
+  return new Lucia(adapter, {
+    sessionCookie: {
+      name: 'cydex_session',
+      expires: false,
+      attributes: {
+        secure: env.APP_ENV === 'production',
+        httpOnly: true,
+        sameSite: 'lax',
+      },
+    },
+    getUserAttributes: (attributes) => {
+      return {
+        id: attributes.id,
+        email: attributes.email,
+        username: attributes.username,
+        role: attributes.role,
+        created_at: attributes.created_at,
+        last_login: attributes.last_login,
+      };
+    },
+  });
+}
+
+export async function validatePassword(password: string, hashedPassword: string): Promise<boolean> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  return hashHex === hashedPassword;
+}
+
+export async function hashPassword(password: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+export async function createUser(
+  env: Env,
+  email: string,
+  username: string,
+  password: string,
+  role: 'admin' | 'analyst' | 'viewer' = 'viewer'
+): Promise<User> {
+  const id = crypto.randomUUID();
+  const hashedPassword = await hashPassword(password);
+  const created_at = new Date().toISOString();
+
+  await env.CYDEX_DB
+    .prepare(`
+      INSERT INTO users (id, email, username, password_hash, role, created_at)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `)
+    .bind(id, email, username, hashedPassword, role, created_at)
+    .run();
+
+  return {
+    id,
+    email,
+    username,
+    role,
+    created_at,
+  };
+}
+
+export async function getUserByEmail(env: Env, email: string): Promise<User | null> {
+  const result = await env.CYDEX_DB
+    .prepare('SELECT id, email, username, role, created_at, last_login FROM users WHERE email = ?')
+    .bind(email)
+    .first<User>();
+
+  return result || null;
+}
+
+export async function getUserById(env: Env, id: string): Promise<User | null> {
+  const result = await env.CYDEX_DB
+    .prepare('SELECT id, email, username, role, created_at, last_login FROM users WHERE id = ?')
+    .bind(id)
+    .first<User>();
+
+  return result || null;
+}
+
+export async function updateLastLogin(env: Env, userId: string): Promise<void> {
+  const lastLogin = new Date().toISOString();
+  
+  await env.CYDEX_DB
+    .prepare('UPDATE users SET last_login = ? WHERE id = ?')
+    .bind(lastLogin, userId)
+    .run();
+}
+
+export async function verifyUserCredentials(
+  env: Env,
+  email: string,
+  password: string
+): Promise<User | null> {
+  const result = await env.CYDEX_DB
+    .prepare('SELECT * FROM users WHERE email = ?')
+    .bind(email)
+    .first<User & { password_hash: string }>();
+
+  if (!result) {
+    return null;
+  }
+
+  const isValidPassword = await validatePassword(password, result.password_hash);
+  if (!isValidPassword) {
+    return null;
+  }
+
+  // Update last login
+  await updateLastLogin(env, result.id);
+
+  return {
+    id: result.id,
+    email: result.email,
+    username: result.username,
+    role: result.role,
+    created_at: result.created_at,
+    last_login: new Date().toISOString(),
+  };
+}
+
+declare module 'lucia' {
+  interface Register {
+    Lucia: ReturnType<typeof initializeLucia>;
+    DatabaseUserAttributes: {
+      id: string;
+      email: string;
+      username: string;
+      role: 'admin' | 'analyst' | 'viewer';
+      created_at: string;
+      last_login?: string;
+    };
+  }
+}

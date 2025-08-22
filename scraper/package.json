@@ -1,0 +1,23 @@
+{
+  "name": "cydex-scraper",
+  "version": "1.0.0",
+  "description": "Federal CI entity web scraper for CyDex platform",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "build": "tsc && node build.js",
+    "deploy": "npm run build && wrangler deploy",
+    "deploy:dry": "npm run build && wrangler deploy --dry-run",
+    "test:local": "wrangler dev --local",
+    "logs": "wrangler tail"
+  },
+  "dependencies": {
+    "hono": "^4.6.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250819.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.4.0",
+    "wrangler": "^4.30.0"
+  }
+}

@@ -1,0 +1,319 @@
+// Beautiful Authentication Service with Lucia
+import { Lucia } from 'lucia';
+import { D1Adapter } from '@lucia-auth/adapter-sqlite';
+import type { Env, User } from '../types';
+import { WebSocketService } from './websocket-service';
+
+export class AuthService {
+  private lucia: Lucia;
+  private wsService: WebSocketService;
+
+  constructor(private env: Env) {
+    // Initialize Lucia with D1 adapter
+    const adapter = new D1Adapter(env.CYDEX_DB, {
+      user: 'users',
+      session: 'sessions'
+    });
+
+    this.lucia = new Lucia(adapter, {
+      sessionCookie: {
+        attributes: {
+          secure: env.APP_ENV === 'production',
+          sameSite: 'lax',
+          httpOnly: true
+        }
+      },
+      getUserAttributes: (attributes) => {
+        return {
+          id: attributes.id,
+          email: attributes.email,
+          username: attributes.username,
+          role: attributes.role,
+          avatar: attributes.avatar,
+          theme: attributes.theme || 'dark',
+          timezone: attributes.timezone || 'UTC',
+          last_login: attributes.last_login,
+          created_at: attributes.created_at
+        };
+      }
+    });
+
+    this.wsService = new WebSocketService(env);
+  }
+
+  /**
+   * Create a new user account with beautiful onboarding
+   */
+  async createUser(userData: {
+    email: string;
+    username: string;
+    password: string;
+    role?: 'admin' | 'analyst' | 'viewer';
+    avatar?: string;
+    theme?: 'dark' | 'light';
+  }): Promise<{ user: User; session: any }> {
+    const userId = crypto.randomUUID();
+    const hashedPassword = await this.hashPassword(userData.password);
+
+    // Create user record
+    await this.env.CYDEX_DB
+      .prepare(`
+        INSERT INTO users (
+          id, email, username, password_hash, role, avatar, theme, 
+          timezone, created_at, last_login
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `)
+      .bind(
+        userId,
+        userData.email,
+        userData.username,
+        hashedPassword,
+        userData.role || 'analyst',
+        userData.avatar || this.generateAvatar(userData.username),
+        userData.theme || 'dark',
+        'UTC',
+        new Date().toISOString(),
+        new Date().toISOString()
+      )
+      .run();
+
+    // Create session
+    const session = await this.lucia.createSession(userId, {});
+
+    const user = await this.getUser(userId);
+
+    // Broadcast user creation event
+    await this.wsService.broadcastSystemStatus({
+      event: 'user_created',
+      user: { id: userId, username: userData.username, role: userData.role },
+      timestamp: new Date().toISOString()
+    });
+
+    return { user: user!, session };
+  }
+
+  /**
+   * Authenticate user with enhanced security
+   */
+  async authenticateUser(
+    email: string, 
+    password: string,
+    metadata?: { userAgent?: string; ipAddress?: string }
+  ): Promise<{ user: User; session: any } | null> {
+    // Get user by email
+    const userRecord = await this.env.CYDEX_DB
+      .prepare('SELECT * FROM users WHERE email = ? AND active = 1')
+      .bind(email)
+      .first();
+
+    if (!userRecord) {
+      return null;
+    }
+
+    // Verify password
+    const isValid = await this.verifyPassword(password, userRecord.password_hash);
+    if (!isValid) {
+      return null;
+    }
+
+    // Update last login
+    await this.env.CYDEX_DB
+      .prepare('UPDATE users SET last_login = ? WHERE id = ?')
+      .bind(new Date().toISOString(), userRecord.id)
+      .run();
+
+    // Create session
+    const session = await this.lucia.createSession(userRecord.id, {});
+
+    const user = this.mapUserRecord(userRecord);
+
+    // Broadcast login event
+    await this.wsService.broadcastSystemStatus({
+      event: 'user_login',
+      user: { id: user.id, username: user.username, role: user.role },
+      timestamp: new Date().toISOString()
+    });
+
+    return { user, session };
+  }
+
+  /**
+   * Validate session and get user
+   */
+  async validateSession(sessionId: string): Promise<{ user: User; session: any } | null> {
+    try {
+      const result = await this.lucia.validateSession(sessionId);
+      if (!result.user || !result.session) {
+        return null;
+      }
+
+      const user = await this.getUser(result.user.id);
+      return user ? { user, session: result.session } : null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Logout user and invalidate session
+   */
+  async logout(sessionId: string): Promise<boolean> {
+    try {
+      await this.lucia.invalidateSession(sessionId);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Get user by ID with full profile
+   */
+  async getUser(userId: string): Promise<User | null> {
+    const userRecord = await this.env.CYDEX_DB
+      .prepare('SELECT * FROM users WHERE id = ? AND active = 1')
+      .bind(userId)
+      .first();
+
+    return userRecord ? this.mapUserRecord(userRecord) : null;
+  }
+
+  /**
+   * Update user profile with beautiful preferences
+   */
+  async updateUser(userId: string, updates: {
+    username?: string;
+    avatar?: string;
+    theme?: 'dark' | 'light';
+    timezone?: string;
+    email?: string;
+    role?: 'admin' | 'analyst' | 'viewer';
+  }): Promise<User | null> {
+    const setClause = Object.keys(updates)
+      .map(key => `${key} = ?`)
+      .join(', ');
+    
+    const values = Object.values(updates);
+    values.push(userId);
+
+    await this.env.CYDEX_DB
+      .prepare(`UPDATE users SET ${setClause}, updated_at = ? WHERE id = ?`)
+      .bind(...values, new Date().toISOString())
+      .run();
+
+    return this.getUser(userId);
+  }
+
+  /**
+   * Get user's dashboard preferences
+   */
+  async getUserPreferences(userId: string): Promise<any> {
+    const prefs = await this.env.CYDEX_DB
+      .prepare('SELECT preferences FROM user_preferences WHERE user_id = ?')
+      .bind(userId)
+      .first();
+
+    if (prefs?.preferences) {
+      return JSON.parse(prefs.preferences);
+    }
+
+    // Default beautiful preferences
+    return {
+      theme: 'dark',
+      layout: 'grid',
+      notifications: {
+        critical: true,
+        high: true,
+        medium: false,
+        low: false
+      },
+      dashboard: {
+        widgets: ['threats', 'metrics', 'ai-analysis', 'recent-activity'],
+        refreshInterval: 30,
+        autoRefresh: true
+      },
+      charts: {
+        type: 'line',
+        timeRange: '24h',
+        showLegend: true,
+        animation: true
+      }
+    };
+  }
+
+  /**
+   * Save user's beautiful dashboard preferences
+   */
+  async saveUserPreferences(userId: string, preferences: any): Promise<void> {
+    await this.env.CYDEX_DB
+      .prepare(`
+        INSERT OR REPLACE INTO user_preferences (user_id, preferences, updated_at)
+        VALUES (?, ?, ?)
+      `)
+      .bind(
+        userId,
+        JSON.stringify(preferences),
+        new Date().toISOString()
+      )
+      .run();
+  }
+
+  /**
+   * Generate beautiful avatar for user
+   */
+  private generateAvatar(username: string): string {
+    const colors = [
+      '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', 
+      '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9'
+    ];
+    
+    const initial = username.charAt(0).toUpperCase();
+    const colorIndex = username.charCodeAt(0) % colors.length;
+    const color = colors[colorIndex];
+    
+    // Return beautiful SVG avatar
+    return `data:image/svg+xml,${encodeURIComponent(`
+      <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="20" cy="20" r="20" fill="${color}"/>
+        <text x="20" y="26" text-anchor="middle" fill="white" font-family="Inter, sans-serif" font-size="16" font-weight="600">${initial}</text>
+      </svg>
+    `)}`;
+  }
+
+  /**
+   * Hash password securely
+   */
+  private async hashPassword(password: string): Promise<string> {
+    const encoder = new TextEncoder();
+    const secret = this.env.SESSION_SECRET || 'cydex-session-secret-2025';
+    const data = encoder.encode(password + secret);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  /**
+   * Verify password securely
+   */
+  private async verifyPassword(password: string, hash: string): Promise<boolean> {
+    const computedHash = await this.hashPassword(password);
+    return computedHash === hash;
+  }
+
+  /**
+   * Map database record to User type
+   */
+  private mapUserRecord(record: any): User {
+    return {
+      id: record.id,
+      email: record.email,
+      username: record.username,
+      role: record.role,
+      avatar: record.avatar,
+      theme: record.theme,
+      timezone: record.timezone,
+      created_at: record.created_at,
+      last_login: record.last_login
+    };
+  }
+}

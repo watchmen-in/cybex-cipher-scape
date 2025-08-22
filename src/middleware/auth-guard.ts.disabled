@@ -1,0 +1,76 @@
+import type { Context, Next } from 'hono';
+import { getCookie } from 'hono/cookie';
+import { initializeLucia, getUserById } from '../lib/auth';
+import type { Env, User } from '../types';
+
+export interface AuthContext {
+  user: User | null;
+  session: any | null;
+}
+
+export async function authGuard(c: Context<{ Bindings: Env }>, next: Next) {
+  const lucia = initializeLucia(c.env);
+  const sessionId = getCookie(c, lucia.sessionCookieName);
+  
+  if (!sessionId) {
+    c.set('user', null);
+    c.set('session', null);
+    await next();
+    return;
+  }
+  
+  try {
+    const { session, user } = await lucia.validateSession(sessionId);
+    
+    if (session && session.fresh) {
+      const cookie = lucia.createSessionCookie(session.id);
+      c.header('Set-Cookie', cookie.serialize());
+    }
+    
+    if (!session) {
+      const cookie = lucia.createBlankSessionCookie();
+      c.header('Set-Cookie', cookie.serialize());
+    }
+    
+    c.set('user', user);
+    c.set('session', session);
+  } catch (error) {
+    console.error('Auth validation error:', error);
+    c.set('user', null);
+    c.set('session', null);
+  }
+  
+  await next();
+}
+
+export function requireAuth(roles?: ('admin' | 'analyst' | 'viewer')[]) {
+  return async (c: Context<{ Bindings: Env }>, next: Next) => {
+    const user = c.get('user') as User | null;
+    
+    if (!user) {
+      return c.json({ error: 'Authentication required' }, 401);
+    }
+    
+    if (roles && !roles.includes(user.role)) {
+      return c.json({ 
+        error: 'Insufficient permissions',
+        required: roles,
+        current: user.role 
+      }, 403);
+    }
+    
+    await next();
+  };
+}
+
+export function requireRole(role: 'admin' | 'analyst' | 'viewer') {
+  return requireAuth([role]);
+}
+
+export function requireAdmin() {
+  return requireRole('admin');
+}
+
+export function requireAnalyst() {
+  return requireAuth(['admin', 'analyst']);
+}

@@ -1,0 +1,77 @@
+name = "cydex-platform"
+main = "src/index.ts"
+compatibility_date = "2025-01-15"
+compatibility_flags = ["nodejs_compat"]
+
+# Frontend assets served by this worker
+[assets]
+directory = "dist"
+binding = "ASSETS"
+
+[observability.logs]
+enabled = true
+
+[vars]
+APP_ENV = "production"
+APP_NAME = "cydex-platform"
+CUSTOM_DOMAIN = "cydexdefense.com"
+
+# Custom domain routes - multiple domains supported
+routes = [
+  { pattern = "cydexdefense.com/*", custom_domain = true },
+  { pattern = "www.cydexdefense.com/*", custom_domain = true },
+  { pattern = "gator-bytes.com/*", custom_domain = true },
+  { pattern = "www.gator-bytes.com/*", custom_domain = true }
+]
+
+# AI Workers binding for threat analysis
+[ai]
+binding = "CYDEX_AI"
+
+# D1 Database binding
+[[d1_databases]]
+binding = "CYDEX_DB"
+database_name = "cydex-db"
+database_id = "cbe970ed-420e-4dc6-83cc-6e9432c9fe56"
+
+# KV Cache binding  
+[[kv_namespaces]]
+binding = "CYDEX_CACHE"
+id = "f6e652345f4b4bb6a507e252c24fa78c"
+
+# R2 Storage binding
+[[r2_buckets]]
+binding = "CYDEX_ASSETS"
+bucket_name = "cydex-assets"
+preview_bucket_name = "cydex-assets-preview"
+
+# Durable Objects for WebSocket connections
+[[migrations]]
+tag = "v1"
+new_classes = [ "ThreatStreamDO" ]
+
+[[durable_objects.bindings]]
+name = "THREAT_STREAM"
+class_name = "ThreatStreamDO"
+
+# Vectorize for threat intelligence correlation
+[[vectorize]]
+binding = "CYDEX_VDB"
+index_name = "cydex-vector-index"
+
+# Cron triggers for automated threat feed ingestion
+[triggers]
+crons = [
+  "0 */4 * * *",    # Every 4 hours for critical feeds
+  "0 0 * * *"       # Daily at midnight for daily feeds  
+]
+
+# Development environment
+[env.development]
+name = "cydex-platform-dev"
+vars = { APP_ENV = "development" }
+
+# Preview environment  
+[env.preview]
+name = "cydex-platform-preview"
+vars = { APP_ENV = "preview" }
