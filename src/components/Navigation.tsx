@@ -2,6 +2,7 @@ import { useState } from "react";
 
 const Navigation = () => {
   const [activeItem, setActiveItem] = useState("Home");
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navItems = ["Home", "Services", "About Us", "Resources"];
 
   return (
@@ -66,12 +67,79 @@ const Navigation = () => {
           </nav>
           
           {/* Mobile Menu Button */}
-          <button className="md:hidden text-white">
+          <button 
+            className="md:hidden text-white"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-label="Toggle mobile menu"
+          >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              {isMobileMenuOpen ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              )}
             </svg>
           </button>
         </div>
+        
+        {/* Mobile Menu */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden bg-background/95 backdrop-blur-md border-t border-white/10">
+            <div className="px-6 py-4 space-y-4">
+              <a 
+                href="/" 
+                className="block text-white/80 hover:text-white transition-colors"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Home
+              </a>
+              
+              <div className="space-y-2">
+                <span className="block text-white/60 text-sm font-medium">Services</span>
+                <a 
+                  href="/threat-intelligence" 
+                  className="block text-white/80 hover:text-white transition-colors pl-4"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Threat Intelligence
+                </a>
+              </div>
+              
+              <a 
+                href="/about-us" 
+                className="block text-white/80 hover:text-white transition-colors"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                About Us
+              </a>
+              
+              <div className="space-y-2">
+                <span className="block text-white/60 text-sm font-medium">Resources</span>
+                <a 
+                  href="/catalog" 
+                  className="block text-white/80 hover:text-white transition-colors pl-4"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Catalog
+                </a>
+                <a 
+                  href="/intrusion-set-crosswalk" 
+                  className="block text-white/80 hover:text-white transition-colors pl-4"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Intrusion Set Crosswalk
+                </a>
+                <a 
+                  href="/cyber-map-america" 
+                  className="block text-white/80 hover:text-white transition-colors pl-4"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Cyber Map of America
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </nav>
   );

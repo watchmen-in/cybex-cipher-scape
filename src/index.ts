@@ -38,8 +38,9 @@ app.use('*', secureHeaders({
     styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
     fontSrc: ["'self'", "https://fonts.gstatic.com"],
     imgSrc: ["'self'", "data:", "https:"],
-    scriptSrc: ["'self'", "'unsafe-inline'"],
-    connectSrc: ["'self'"],
+    scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "blob:"],
+    connectSrc: ["'self'", "https:"],
+    workerSrc: ["'self'", "blob:"],
   },
 }));
 
@@ -115,7 +116,7 @@ app.get('*', async (c) => {
     const url = new URL(c.req.url);
     
     // Try to serve the exact request first (including assets and index.html)
-    const response = await c.env.ASSETS.fetch(c.req);
+    const response = await c.env.ASSETS.fetch(c.req.raw);
     
     // If it's a successful response, return it
     if (response.status === 200) {
@@ -126,22 +127,24 @@ app.get('*', async (c) => {
     if (response.status === 404 && !url.pathname.startsWith("/assets/") && 
         !url.pathname.match(/\.(css|js|jpg|jpeg|png|svg|ico|woff|woff2|ttf|eot)$/)) {
       
-      const indexRequest = new Request(new URL("/index.html", c.req.url), {
+      const indexRequest = new Request(new URL("/index.html", url.origin), {
         method: "GET",
-        headers: c.req.raw.headers
+        headers: new Headers(c.req.raw.headers)
       });
       
       const indexResponse = await c.env.ASSETS.fetch(indexRequest);
       
       if (indexResponse.status === 200) {
+        // Get original headers and add our custom ones
+        const headers = new Headers(indexResponse.headers);
+        headers.set("Content-Type", "text/html; charset=utf-8");
+        headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
+        headers.set("Pragma", "no-cache");
+        headers.set("Expires", "0");
+        
         return new Response(indexResponse.body, {
           status: 200,
-          headers: {
-            "Content-Type": "text/html; charset=utf-8",
-            "Cache-Control": "no-cache, no-store, must-revalidate",
-            "Pragma": "no-cache",
-            "Expires": "0",
-          },
+          headers: headers,
         });
       }
     }
@@ -153,7 +156,8 @@ app.get('*', async (c) => {
     console.error('Asset serving error:', error);
     // Fallback: try to serve index.html
     try {
-      const indexRequest = new Request(new URL("/index.html", c.req.url), {
+      const origin = new URL(c.req.url).origin;
+      const indexRequest = new Request(`${origin}/index.html`, {
         method: "GET"
       });
       const indexResponse = await c.env.ASSETS.fetch(indexRequest);

@@ -18,10 +18,10 @@ CUSTOM_DOMAIN = "cydexdefense.com"
 
 # Custom domain routes - multiple domains supported
 routes = [
-  { pattern = "cydexdefense.com/*", custom_domain = true },
-  { pattern = "www.cydexdefense.com/*", custom_domain = true },
-  { pattern = "gator-bytes.com/*", custom_domain = true },
-  { pattern = "www.gator-bytes.com/*", custom_domain = true }
+  "cydexdefense.com/*",
+  "www.cydexdefense.com/*",
+  "gator-bytes.com/*",
+  "www.gator-bytes.com/*"
 ]
 
 # AI Workers binding for threat analysis

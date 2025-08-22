@@ -221,12 +221,70 @@ const Catalog = () => {
                             {resource.downloads} downloads
                           </span>
                           <div className="flex gap-2">
-                            <Button size="sm" variant="outline" className="border-white/20 text-white/80 hover:bg-white/10">
-                              Preview
-                            </Button>
-                            <Button size="sm" className="bg-cyber-blue hover:bg-cyber-blue/80">
-                              Download
-                            </Button>
+                            {resource.url && (
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                className="border-white/20 text-white/80 hover:bg-white/10"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  window.open(resource.url, '_blank', 'noopener,noreferrer');
+                                }}
+                              >
+                                <ExternalLink className="w-3 h-3 mr-1" />
+                                View Source
+                              </Button>
+                            )}
+                            {resource.category === 'cisa' && (
+                              <Button 
+                                size="sm" 
+                                className="bg-cyber-blue hover:bg-cyber-blue/80"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  // Navigate to detailed CISA CPG view
+                                  window.location.href = `/catalog/${resource.id}`;
+                                }}
+                              >
+                                <FileText className="w-3 h-3 mr-1" />
+                                Details
+                              </Button>
+                            )}
+                            {resource.category === 'frameworks' && (
+                              <Button 
+                                size="sm" 
+                                className="bg-cyber-blue hover:bg-cyber-blue/80"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (resource.url) {
+                                    window.open(resource.url, '_blank', 'noopener,noreferrer');
+                                  } else {
+                                    // Show framework details or redirect to NIST/MITRE sites
+                                    if (resource.title.toLowerCase().includes('nist')) {
+                                      window.open('https://www.nist.gov/cyberframework', '_blank');
+                                    } else if (resource.title.toLowerCase().includes('mitre')) {
+                                      window.open('https://attack.mitre.org', '_blank');
+                                    }
+                                  }
+                                }}
+                              >
+                                <Download className="w-3 h-3 mr-1" />
+                                Access
+                              </Button>
+                            )}
+                            {!resource.url && resource.category !== 'cisa' && resource.category !== 'frameworks' && (
+                              <Button 
+                                size="sm" 
+                                className="bg-cyber-blue hover:bg-cyber-blue/80"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  // Show coming soon message
+                                  alert('This resource will be available soon. Check back for updates.');
+                                }}
+                              >
+                                <Download className="w-3 h-3 mr-1" />
+                                Coming Soon
+                              </Button>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -247,23 +305,38 @@ const Catalog = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      <div className="flex justify-between items-center p-2 rounded hover:bg-white/5 transition-colors cursor-pointer">
+                      <div 
+                        className="flex justify-between items-center p-2 rounded hover:bg-white/5 transition-colors cursor-pointer"
+                        onClick={() => window.open('https://www.nist.gov/cyberframework/online-learning/components-framework', '_blank')}
+                      >
                         <span className="text-white/80">Identify (ID)</span>
                         <ChevronRight className="w-4 h-4 text-white/40" />
                       </div>
-                      <div className="flex justify-between items-center p-2 rounded hover:bg-white/5 transition-colors cursor-pointer">
+                      <div 
+                        className="flex justify-between items-center p-2 rounded hover:bg-white/5 transition-colors cursor-pointer"
+                        onClick={() => window.open('https://www.nist.gov/cyberframework/online-learning/components-framework', '_blank')}
+                      >
                         <span className="text-white/80">Protect (PR)</span>
                         <ChevronRight className="w-4 h-4 text-white/40" />
                       </div>
-                      <div className="flex justify-between items-center p-2 rounded hover:bg-white/5 transition-colors cursor-pointer">
+                      <div 
+                        className="flex justify-between items-center p-2 rounded hover:bg-white/5 transition-colors cursor-pointer"
+                        onClick={() => window.open('https://www.nist.gov/cyberframework/online-learning/components-framework', '_blank')}
+                      >
                         <span className="text-white/80">Detect (DE)</span>
                         <ChevronRight className="w-4 h-4 text-white/40" />
                       </div>
-                      <div className="flex justify-between items-center p-2 rounded hover:bg-white/5 transition-colors cursor-pointer">
+                      <div 
+                        className="flex justify-between items-center p-2 rounded hover:bg-white/5 transition-colors cursor-pointer"
+                        onClick={() => window.open('https://www.nist.gov/cyberframework/online-learning/components-framework', '_blank')}
+                      >
                         <span className="text-white/80">Respond (RS)</span>
                         <ChevronRight className="w-4 h-4 text-white/40" />
                       </div>
-                      <div className="flex justify-between items-center p-2 rounded hover:bg-white/5 transition-colors cursor-pointer">
+                      <div 
+                        className="flex justify-between items-center p-2 rounded hover:bg-white/5 transition-colors cursor-pointer"
+                        onClick={() => window.open('https://www.nist.gov/cyberframework/online-learning/components-framework', '_blank')}
+                      >
                         <span className="text-white/80">Recover (RC)</span>
                         <ChevronRight className="w-4 h-4 text-white/40" />
                       </div>
